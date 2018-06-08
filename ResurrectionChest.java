@@ -45,6 +45,7 @@ public class ResurrectionChest extends JavaPlugin implements Listener {
     @EventHandler
     public void onSignPlace(SignChangeEvent event) {
 
+        if (!event.getPlayer().hasPermission("resurrectionchest.use")) return;
         if (!event.getLine(0).equalsIgnoreCase("[DeathChest]") &&
                 !event.getLine(1).equalsIgnoreCase("[DeathChest]")) return;
         if (event.getBlock().getType() != Material.WALL_SIGN) return;
@@ -75,6 +76,7 @@ public class ResurrectionChest extends JavaPlugin implements Listener {
     @EventHandler
     public void onDeath(PlayerDeathEvent event) {
 
+        if (!event.getEntity().hasPermission("resurrectionchest.use")) return;
         if (event.getKeepInventory()) return;
         if (!ConfigValues.playerDataConfig.contains(event.getEntity().getUniqueId().toString())) return;
 
