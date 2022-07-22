@@ -1,0 +1,11 @@
+name: ResurrectionChest
+version: 1.7.1
+author: MagmaGuy
+main: com.magmaguy.resurrectionchest.ResurrectionChest
+load: POSTWORLD
+softdepend: [Multiverse-Core]
+api-version: 1.13
+permissions:
+  resurrectionchest.use:
+    description: Allows players to use the plugin. This includes both chest creation and items going to chest upon death.
+    default: true
