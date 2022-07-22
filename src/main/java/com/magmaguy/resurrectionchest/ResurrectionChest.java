@@ -34,7 +34,10 @@ public class ResurrectionChest extends JavaPlugin implements Listener {
 
     @Override
     public void onDisable() {
-
+        ChunkEntity.getChunkEntities().clear();
+        ChunkEntity.getWorldEntities().clear();
+        ResurrectionChestObject.getResurrectionChests().values().forEach(chest->chest.unload(false));
+        ResurrectionChestObject.getResurrectionChests().clear();
     }
 
 }

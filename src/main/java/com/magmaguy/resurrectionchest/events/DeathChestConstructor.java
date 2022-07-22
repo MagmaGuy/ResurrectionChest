@@ -1,10 +1,8 @@
 package com.magmaguy.resurrectionchest.events;
 
-import com.magmaguy.resurrectionchest.ResurrectionChest;
 import com.magmaguy.resurrectionchest.ResurrectionChestObject;
 import com.magmaguy.resurrectionchest.configs.DefaultConfig;
 import com.magmaguy.resurrectionchest.configs.PlayerDataConfig;
-import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -35,6 +33,8 @@ public class DeathChestConstructor implements Listener {
         Block attached = event.getBlock().getRelative(sign.getFacing().getOppositeFace());
         if (attached.getType() != Material.CHEST) return;
 
+        if (ResurrectionChestObject.getResurrectionChest(event.getPlayer()) != null)
+            ResurrectionChestObject.getResurrectionChest(event.getPlayer()).remove();
         ResurrectionChestObject resurrectionChest = new ResurrectionChestObject(event.getPlayer().getUniqueId(), attached.getLocation());
         PlayerDataConfig.addPlayerdata(event.getPlayer().getUniqueId(), attached.getLocation());
 

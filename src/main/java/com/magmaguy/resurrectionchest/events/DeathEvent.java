@@ -2,7 +2,6 @@ package com.magmaguy.resurrectionchest.events;
 
 import com.magmaguy.resurrectionchest.ResurrectionChestObject;
 import com.magmaguy.resurrectionchest.configs.DefaultConfig;
-import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -32,7 +31,8 @@ public class DeathEvent implements Listener {
         Player player = event.getEntity();
 
         ResurrectionChestObject resurrectionChestObject = ResurrectionChestObject.getResurrectionChest(player);
-        if (resurrectionChestObject == null) return;
+        if (resurrectionChestObject == null || resurrectionChestObject.getLocation() == null || resurrectionChestObject.getLocation().getWorld() == null)
+            return;
 
         Block deathChestBlock = resurrectionChestObject.getLocation().getBlock();
 

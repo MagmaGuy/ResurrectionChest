@@ -2,9 +2,9 @@ package com.magmaguy.resurrectionchest;
 
 import com.magmaguy.resurrectionchest.configs.DefaultConfig;
 import com.magmaguy.resurrectionchest.configs.PlayerDataConfig;
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Particle;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
@@ -62,6 +62,13 @@ public class ResurrectionChestObject {
         new ChunkEntity(location, this);
     }
 
+    public ResurrectionChestObject(UUID uuid, String locationString) {
+        this.uuid = uuid;
+        this.location = null;
+        resurrectionChests.put(uuid, this);
+        new ChunkEntity(locationString, this);
+    }
+
     public UUID getUuid() {
         return uuid;
     }
@@ -72,17 +79,31 @@ public class ResurrectionChestObject {
 
     public void load() {
         initializeParticleEffects();
-        visualEffectTask = null;
     }
 
-    public void unload() {
+    public void load(World world) {
+        location.setWorld(world);
+        initializeParticleEffects();
+    }
+
+    public void unload(boolean worldUnload) {
         if (visualEffectTask == null) return;
         visualEffectTask.cancel();
         visualEffectTask = null;
+        if (worldUnload)
+            location.setWorld(null);
+    }
+
+    public void remove() {
+        if (visualEffectTask != null)
+            visualEffectTask.cancel();
+        resurrectionChests.remove(uuid);
+        ChunkEntity.getChunkEntities().values().removeIf(entity -> uuid.equals(entity.resurrectionChestObject.uuid));
+        ChunkEntity.getWorldEntities().values().removeIf(entity -> uuid.equals(entity.resurrectionChestObject.uuid));
     }
 
     public static void initializeConfigDeathchests() {
         for (String uuidString : PlayerDataConfig.fileConfiguration.getKeys(false))
-            new ResurrectionChestObject(UUID.fromString(uuidString), LocationParser.parseLocation(PlayerDataConfig.fileConfiguration.getString(uuidString)));
+            new ResurrectionChestObject(UUID.fromString(uuidString), PlayerDataConfig.fileConfiguration.getString(uuidString));
     }
 }
