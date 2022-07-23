@@ -3,3 +3,6 @@
 
 # Gradle
 .gradle/
+
+# Compiled output
+output/
