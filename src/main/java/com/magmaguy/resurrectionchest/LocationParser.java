@@ -16,10 +16,6 @@ public class LocationParser {
         if (locationString.split(",").length < 4) return null;
 
         for (String string : locationString.split(",")) {
-            if (string.contains("name="))
-                for (World worldName : Bukkit.getServer().getWorlds())
-                    if (worldName.getName().equals(string.split("=")[1]))
-                        world = worldName;
             if (string.contains("x="))
                 x = Double.parseDouble(string.split("=")[1]);
 
@@ -31,15 +27,17 @@ public class LocationParser {
 
         }
 
+        world = Bukkit.getWorld(getWorldString(locationString));
+
         return new Location(world, x, y, z);
 
     }
 
     public static String getWorldString(String configString) {
         if (configString == null) return null;
-        for (String string : configString.split(","))
+        for (String string : configString.split("\\{"))
             if (string.contains("name="))
-                return string.split("=")[1];
+                return string.split("}")[0].split("=")[1];
         return null;
     }
 

@@ -2,6 +2,7 @@ package com.magmaguy.resurrectionchest.events;
 
 import com.magmaguy.resurrectionchest.ResurrectionChestObject;
 import com.magmaguy.resurrectionchest.configs.DefaultConfig;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -12,6 +13,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.inventory.DoubleChestInventory;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
@@ -74,10 +76,19 @@ public class DeathEvent implements Listener {
                 event.getClickedBlock().getType() != Material.SHULKER_BOX)
             return;
         if (!DefaultConfig.storeXP || !xp.containsKey(event.getPlayer())) return;
-        if (!ResurrectionChestObject.getResurrectionChest(event.getPlayer()).getLocation().getBlock().equals(event.getClickedBlock()))
-            return;
+        Block block = event.getClickedBlock();
+        if (!ResurrectionChestObject.getResurrectionChest(event.getPlayer()).getLocation().equals(event.getClickedBlock().getLocation())) {
+            if (!(block.getType().equals(Material.CHEST) && ((Chest) block.getState()).getInventory() instanceof DoubleChestInventory))
+                return;
+            if (!(event.getClickedBlock().getLocation().distance(ResurrectionChestObject.getResurrectionChest(event.getPlayer()).getLocation()) < 2))
+                return;
+            if (!(ResurrectionChestObject.getResurrectionChest(event.getPlayer()).getLocation().getBlock().getType().equals(Material.CHEST) && ((Chest) ResurrectionChestObject.getResurrectionChest(event.getPlayer()).getLocation().getBlock().getState()).getInventory() instanceof DoubleChestInventory))
+                return;
+            if (!(((DoubleChestInventory) ((Chest) ResurrectionChestObject.getResurrectionChest(event.getPlayer()).getLocation().getBlock().getState()).getInventory()).getLocation()).equals(((DoubleChestInventory) (((Chest) block.getState()).getInventory())).getLocation()))
+                return;
+        }
         int exp = Math.round(xp.get(event.getPlayer()));
-        event.getPlayer().giveExp(exp);
+        event.getPlayer().giveExpLevels(exp);
         xp.remove(event.getPlayer());
     }
 }

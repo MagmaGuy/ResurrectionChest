@@ -49,6 +49,8 @@ public class DeathChestRemover implements Listener {
         ResurrectionChestObject resurrectionChestObject = ResurrectionChestObject.getResurrectionChest(location);
         if (resurrectionChestObject == null) return;
 
+        resurrectionChestObject.remove();
+
         PlayerDataConfig.removePlayerData(resurrectionChestObject.getUuid());
 
         if (Bukkit.getPlayer(resurrectionChestObject.getUuid()).isOnline())
