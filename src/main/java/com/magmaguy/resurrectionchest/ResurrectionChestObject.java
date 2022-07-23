@@ -24,16 +24,6 @@ public class ResurrectionChestObject {
         resurrectionChests.put(uuid, this);
         new ChunkEntity(location, this);
     }
-    public ResurrectionChestObject(UUID uuid, String locationString) {
-        this.uuid = uuid;
-        this.location = null;
-        if (LocationParser.parseLocation(locationString).getWorld() != null) {
-            new ResurrectionChestObject(uuid, LocationParser.parseLocation(locationString));
-            return;
-        }
-        resurrectionChests.put(uuid, this);
-        new ChunkEntity(locationString, this);
-    }
 
     public static HashMap<UUID, ResurrectionChestObject> getResurrectionChests() {
         return resurrectionChests;
@@ -54,7 +44,7 @@ public class ResurrectionChestObject {
 
     public static void initializeConfigDeathchests() {
         for (String uuidString : PlayerDataConfig.fileConfiguration.getKeys(false))
-            new ResurrectionChestObject(UUID.fromString(uuidString), PlayerDataConfig.fileConfiguration.getString(uuidString));
+            new ResurrectionChestObject(UUID.fromString(uuidString), PlayerDataConfig.fileConfiguration.getLocation(uuidString));
     }
 
     public void initializeParticleEffects() {
@@ -107,4 +97,5 @@ public class ResurrectionChestObject {
         ChunkEntity.getChunkEntities().values().removeIf(entity -> uuid.equals(entity.resurrectionChestObject.uuid));
         ChunkEntity.getWorldEntities().values().removeIf(entity -> uuid.equals(entity.resurrectionChestObject.uuid));
     }
+
 }
