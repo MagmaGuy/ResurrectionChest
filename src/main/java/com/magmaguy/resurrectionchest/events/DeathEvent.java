@@ -12,7 +12,10 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.player.PlayerExpChangeEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.DoubleChestInventory;
 import org.bukkit.inventory.ItemStack;
 
@@ -21,7 +24,7 @@ import java.util.HashMap;
 import java.util.List;
 
 public class DeathEvent implements Listener {
-    HashMap<Player, Float> xp = new HashMap<>();
+    HashMap<Player, Integer> xp = new HashMap<>();
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onDeath(PlayerDeathEvent event) {
@@ -62,7 +65,10 @@ public class DeathEvent implements Listener {
         }
 
         if (DefaultConfig.storeXP) {
-            xp.put(player, (float) (event.getDroppedExp() * DefaultConfig.xpPercentage));
+            if (event.getKeepLevel()) return;
+            //This is hardcoded because minecraft halves the exp and there is no other way to store this data aside from just always having it update
+            xp.put(player, (int) Math.round(continuousPlayerExpMap.get(event.getEntity()) * DefaultConfig.xpPercentage));
+            continuousPlayerExpMap.put(event.getEntity(), 0);
             event.setDroppedExp(0);
         }
         player.sendMessage(ChatColor.translateAlternateColorCodes('&', DefaultConfig.deathMessage));
@@ -88,7 +94,27 @@ public class DeathEvent implements Listener {
                 return;
         }
         int exp = Math.round(xp.get(event.getPlayer()));
-        event.getPlayer().giveExpLevels(exp);
+        event.getPlayer().giveExp(exp);
+        continuousPlayerExpMap.put(event.getPlayer(), exp);
         xp.remove(event.getPlayer());
     }
+
+    private static HashMap<Player, Integer> continuousPlayerExpMap = new HashMap<>();
+
+    @EventHandler(ignoreCancelled = true)
+    public void onPlayerLogin(PlayerJoinEvent event) {
+        continuousPlayerExpMap.put(event.getPlayer(), event.getPlayer().getTotalExperience());
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onExpChange(PlayerExpChangeEvent event) {
+        if (event.getPlayer().isDead()) return;
+        continuousPlayerExpMap.put(event.getPlayer(), event.getPlayer().getTotalExperience());
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onPlayerQuit(PlayerQuitEvent event) {
+        continuousPlayerExpMap.remove(event.getPlayer());
+    }
+
 }
