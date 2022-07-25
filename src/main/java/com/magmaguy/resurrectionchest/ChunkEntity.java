@@ -1,9 +1,7 @@
 package com.magmaguy.resurrectionchest;
 
 import com.google.common.collect.ArrayListMultimap;
-import com.magmaguy.resurrectionchest.configs.PlayerDataConfig;
 import com.magmaguy.resurrectionchest.utils.ChunkVectorizer;
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.event.EventHandler;
@@ -13,7 +11,6 @@ import org.bukkit.event.world.ChunkUnloadEvent;
 import org.bukkit.event.world.WorldLoadEvent;
 import org.bukkit.event.world.WorldUnloadEvent;
 
-import javax.annotation.processing.Generated;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -47,21 +44,6 @@ public class ChunkEntity {
     private static ArrayListMultimap<String, ChunkEntity> worldEntities = ArrayListMultimap.create();
     public static ArrayListMultimap<String, ChunkEntity> getWorldEntities(){
         return worldEntities;
-    }
-
-    public ChunkEntity(String locationString, ResurrectionChestObject resurrectionChestObject) {
-        this.location = LocationParser.parseLocation(locationString);
-        if (location == null) {
-            Bukkit.getLogger().warning("[BetterStructures] Detected bad entry for resurrection chest! Entry was " + locationString + "  - remove it to clear this issue!");
-            return;
-        }
-        if (location.getWorld() == null)
-            this.worldName = LocationParser.getWorldString(locationString);
-        else
-            this.worldName = location.getWorld().getName();
-
-        this.resurrectionChestObject = resurrectionChestObject;
-        worldEntities.put(worldName, this);
     }
 
     public static void loadChunk(List<ChunkEntity> loadedChunkEntities) {
