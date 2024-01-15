@@ -21,12 +21,7 @@ public class DeathChestConstructor implements Listener {
         if (!event.getLine(0).equalsIgnoreCase(DefaultConfig.resurrectionChestSignName) &&
                 !event.getLine(1).equalsIgnoreCase(DefaultConfig.resurrectionChestSignName))
             return;
-        if (event.getBlock().getType() != Material.ACACIA_WALL_SIGN &&
-                event.getBlock().getType() != Material.BIRCH_WALL_SIGN &&
-                event.getBlock().getType() != Material.DARK_OAK_WALL_SIGN &&
-                event.getBlock().getType() != Material.JUNGLE_WALL_SIGN &&
-                event.getBlock().getType() != Material.OAK_WALL_SIGN &&
-                event.getBlock().getType() != Material.SPRUCE_WALL_SIGN)
+        if (!(event.getBlock().getBlockData() instanceof WallSign))
             return;
 
         WallSign sign = (WallSign) event.getBlock().getBlockData();

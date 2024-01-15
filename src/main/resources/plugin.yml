@@ -1,5 +1,5 @@
 name: ResurrectionChest
-version: 1.8.3
+version: 1.9.0
 author: MagmaGuy
 main: com.magmaguy.resurrectionchest.ResurrectionChest
 load: POSTWORLD
