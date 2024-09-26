@@ -23,7 +23,7 @@ public class PlayerDataConfig {
     }
 
     public static void addPlayerdata(UUID uuid, Location location){
-        fileConfiguration.set(uuid.toString(), location.toString());
+        fileConfiguration.set(uuid.toString(), location);
         ConfigurationEngine.fileSaverCustomValues(fileConfiguration, file);
     }
 

@@ -1,0 +1,9 @@
+# Intellij IDEA
+.idea/
+
+# Gradle
+build/
+.gradle/
+
+# Compiled output
+output/
