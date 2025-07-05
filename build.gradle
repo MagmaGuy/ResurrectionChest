@@ -10,7 +10,7 @@ compileJava.options.encoding = "UTF-8"
 compileTestJava.options.encoding = "UTF-8"
 
 group = "com.magmaguy"
-version = "1.9.0"
+version = "2.0.0"
 description = "ResurrectionChest"
 
 repositories {
@@ -29,6 +29,10 @@ repositories {
     //Bstats API
     maven { url = 'https://repo.codemc.org/repository/maven-public' }
 
+    //MagmaGuy's Repository
+    maven { url = 'https://repo.magmaguy.com/releases' }
+    maven { url = "https://repo.magmaguy.com/snapshots" }
+
     mavenCentral()
     jcenter()
     mavenLocal()
@@ -39,6 +43,16 @@ dependencies {
     compileOnly "org.spigotmc:spigot-api:1.20.4-R0.1-SNAPSHOT"
     //BStats API
     implementation group: 'org.bstats', name: 'bstats-bukkit', version: '2.2.1'
+    //MagmaCore
+    implementation (group: 'com.magmaguy', name: 'MagmaCore', version: '1.17-SNAPSHOT'){
+        changing = true
+    }
+    compileOnly (group: 'com.magmaguy', name: 'FreeMinecraftModels', version: '2.3.0'){
+        changing = true
+    }
+    //lombok
+    compileOnly 'org.projectlombok:lombok:1.18.34'
+    annotationProcessor 'org.projectlombok:lombok:1.18.34'
 }
 
 artifacts { // task 'build' runs generates uberjar

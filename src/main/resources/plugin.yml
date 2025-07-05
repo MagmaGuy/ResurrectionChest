@@ -1,11 +1,17 @@
 name: ResurrectionChest
-version: 1.9.0
+version: 2.0.0
 author: MagmaGuy
 main: com.magmaguy.resurrectionchest.ResurrectionChest
 load: POSTWORLD
-softdepend: [Multiverse-Core]
+softdepend: [Multiverse-Core, FreeMinecraftModels]
 api-version: 1.13
 permissions:
   resurrectionchest.use:
     description: Allows players to use the plugin. This includes both chest creation and items going to chest upon death.
     default: true
+  resurrectionchest.model.free:
+    description: Allows players to use the free death chest model.
+    default: true
+  resurrectionchest.model.premium:
+    description: Allows players to use the premium death chest model.
+    default: op

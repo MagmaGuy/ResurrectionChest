@@ -1,8 +1,7 @@
 package com.magmaguy.resurrectionchest.events;
 
-import com.magmaguy.resurrectionchest.ResurrectionChestObject;
 import com.magmaguy.resurrectionchest.configs.DefaultConfig;
-import org.bukkit.Bukkit;
+import com.magmaguy.resurrectionchest.ResurrectionChestObject;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -43,7 +42,7 @@ public class DeathEvent implements Listener {
 
         if (!deathChestBlock.getType().equals(Material.CHEST)) {
             player.sendMessage(ChatColor.translateAlternateColorCodes('&', DefaultConfig.chestMissingMessage));
-            DeathChestRemover.unregisterDeathChestEntry(resurrectionChestObject.getLocation());
+            resurrectionChestObject.remove();
             return;
         }
 

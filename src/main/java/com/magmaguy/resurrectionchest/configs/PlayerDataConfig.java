@@ -1,30 +1,63 @@
 package com.magmaguy.resurrectionchest.configs;
 
+import com.magmaguy.magmacore.config.ConfigurationEngine;
+import com.magmaguy.magmacore.config.ConfigurationFile;
+import com.magmaguy.resurrectionchest.LocationParser;
+import com.magmaguy.resurrectionchest.ResurrectionChestObject;
+import lombok.Getter;
+import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.configuration.file.FileConfiguration;
 
 import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
-public class PlayerDataConfig {
+public class PlayerDataConfig extends ConfigurationFile {
 
-    public static FileConfiguration fileConfiguration;
-    private static File file;
+    @Getter
+    private static PlayerDataConfig instance;
 
-    public static void initializeConfig() {
-        file = ConfigurationEngine.fileCreator("playerData.yml");
-        fileConfiguration = ConfigurationEngine.fileConfigurationCreator(file);
-        ConfigurationEngine.fileSaverCustomValues(fileConfiguration, file);
+    public record PlayerData(Location location, String chestModel) {
+    }
+
+    public PlayerDataConfig() {
+        super("playerData.yml");
+        instance = this;
     }
 
     public static void removePlayerData(UUID uuid) {
-        fileConfiguration.set(uuid.toString(), null);
-        ConfigurationEngine.fileSaverCustomValues(fileConfiguration, file);
+        instance.fileConfiguration.set(uuid.toString(), null);
+        ConfigurationEngine.fileSaverCustomValues(instance.fileConfiguration, instance.file);
     }
 
-    public static void addPlayerdata(UUID uuid, Location location){
-        fileConfiguration.set(uuid.toString(), location.toString());
-        ConfigurationEngine.fileSaverCustomValues(fileConfiguration, file);
+    public static void addPlayerdata(UUID uuid, Location location, String chestModel) {
+        Map<String, Object> playerData = new HashMap<>();
+        playerData.put("location", location.toString());
+        playerData.put("chestModel", chestModel);
+        instance.fileConfiguration.set(uuid.toString(), playerData);
+        ConfigurationEngine.fileSaverCustomValues(instance.fileConfiguration, instance.file);
     }
 
+    public static PlayerData getPlayerData(UUID uuid) {
+        Map<String, Object> data = instance.fileConfiguration.getConfigurationSection(uuid.toString()).getValues(false);
+        Location location = LocationParser.parseLocation((String) data.get("location"));
+        String chestModel = (String) data.get("chestModel");
+        return new PlayerData(location, chestModel);
+    }
+
+    public static void unregisterDeathChestEntry(ResurrectionChestObject resurrectionChestObject) {
+        PlayerDataConfig.removePlayerData(resurrectionChestObject.getUuid());
+
+        if (Bukkit.getPlayer(resurrectionChestObject.getUuid()).isOnline())
+            Bukkit.getPlayer(resurrectionChestObject.getUuid()).sendMessage(ChatColor.translateAlternateColorCodes('&', DefaultConfig.chestDestructionMessage));
+
+        ResurrectionChestObject.getResurrectionChests().remove(resurrectionChestObject.getUuid());
+    }
+
+    @Override
+    public void initializeValues() {
+    }
 }

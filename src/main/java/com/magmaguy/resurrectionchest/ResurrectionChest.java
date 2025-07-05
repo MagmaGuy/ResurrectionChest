@@ -1,5 +1,6 @@
 package com.magmaguy.resurrectionchest;
 
+import com.magmaguy.magmacore.MagmaCore;
 import com.magmaguy.resurrectionchest.configs.DefaultConfig;
 import com.magmaguy.resurrectionchest.configs.PlayerDataConfig;
 import com.magmaguy.resurrectionchest.events.DeathChestConstructor;
@@ -18,25 +19,45 @@ public class ResurrectionChest extends JavaPlugin implements Listener {
     @Override
     public void onEnable() {
         new Metrics(this, 2677);
-        plugin = Bukkit.getPluginManager().getPlugin("ResurrectionChest");
+        MetadataHandler.PLUGIN = plugin = Bukkit.getPluginManager().getPlugin("ResurrectionChest");
 
-        DefaultConfig.loadConfiguration();
-        PlayerDataConfig.initializeConfig();
+        Bukkit.getLogger().info("\n" +
+                "                                                                       \n" +
+                " _____                             _   _         _____ _           _   \n" +
+                "| __  |___ ___ _ _ ___ ___ ___ ___| |_|_|___ ___|     | |_ ___ ___| |_ \n" +
+                "|    -| -_|_ -| | |  _|  _| -_|  _|  _| | . |   |   --|   | -_|_ -|  _|\n" +
+                "|__|__|___|___|___|_| |_| |___|___|_| |_|___|_|_|_____|_|_|___|___|_|  \n" +
+                "                                                                       \n");
+
+        MagmaCore.onEnable();
+        MagmaCore.initializeImporter();
+
+        MagmaCore.checkVersionUpdate("57541");
+
+        new DefaultConfig();
+        new PlayerDataConfig();
 
         this.getServer().getPluginManager().registerEvents(new DeathChestConstructor(), this);
         this.getServer().getPluginManager().registerEvents(new DeathChestRemover(), this);
         this.getServer().getPluginManager().registerEvents(new DeathEvent(), this);
-        this.getServer().getPluginManager().registerEvents(new ChunkEntity.ChunkEntityEvents(), this);
+        this.getServer().getPluginManager().registerEvents(new PersistentObjectHandler.PersistentObjectHandlerEvents(), this);
         this.getServer().getPluginManager().registerEvents(this, this);
 
         ResurrectionChestObject.initializeConfigDeathchests();
+        ResurrectionChestObject.startClock();
+    }
+
+    @Override
+    public void onLoad() {
+        MagmaCore.createInstance(this);
     }
 
     @Override
     public void onDisable() {
-        ChunkEntity.getChunkEntities().clear();
-        ChunkEntity.getWorldEntities().clear();
-        ResurrectionChestObject.getResurrectionChests().values().forEach(chest->chest.unload(false));
+        MagmaCore.shutdown();
+        PersistentObjectHandler.shutdown();
+        ResurrectionChestObject.shutdown();
+        ResurrectionChestObject.getResurrectionChests().values().forEach(ResurrectionChestObject::chunkUnload);
         ResurrectionChestObject.getResurrectionChests().clear();
     }
 

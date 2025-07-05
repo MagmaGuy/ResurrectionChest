@@ -1,5 +1,7 @@
 package com.magmaguy.resurrectionchest.configs;
 
+import com.magmaguy.magmacore.config.ConfigurationEngine;
+import com.magmaguy.magmacore.config.ConfigurationFile;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 
@@ -7,7 +9,11 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 
-public class DefaultConfig {
+public class DefaultConfig extends ConfigurationFile {
+
+    public DefaultConfig() {
+        super("config.yml");
+    }
 
     public static String resurrectionChestSignName;
     public static boolean enableHighCompatibility;
@@ -24,32 +30,35 @@ public class DefaultConfig {
     public static List<String> blacklistedWorlds;
     public static boolean storeXP;
     public static double xpPercentage;
+    public static String deathChestNameTag;
+    public static String freeSingleDeathChestModelName;
+    public static String freeDoubleDeathChestModelName;
+    public static String premiumSingleDeathChestModelName;
+    public static String premiumDoubleDeathChestModelName;
+    public static String deathChestRemovedMessage;
 
-    public static void loadConfiguration() {
-        File file = ConfigurationEngine.fileCreator("config.yml");
-        FileConfiguration fileConfiguration = ConfigurationEngine.fileConfigurationCreator(file);
+    @Override
+    public void initializeValues() {
         resurrectionChestSignName = ConfigurationEngine.setString(fileConfiguration, "Input name for death chest", "[DeathChest]");
         enableHighCompatibility = ConfigurationEngine.setBoolean(fileConfiguration, "Enable high compatibility / low security mode for plugin conflicts", false);
         enableDurabilityLossOnDeath = ConfigurationEngine.setBoolean(fileConfiguration, "Lower worn armor's durability on death", true);
         durabilityToLower = ConfigurationEngine.setInt(fileConfiguration, "Amount of durability to lower on death", 100);
-        chestCreationMessage = ConfigurationEngine.setString(fileConfiguration, "Chest creation message", "&aYou've created your Death Chest!");
-        chestDestructionMessage = ConfigurationEngine.setString(fileConfiguration, "Chest destruction message", "&cYour Death Chest has been destroyed!");
-        chestMissingMessage = ConfigurationEngine.setString(fileConfiguration, "Chest missing message", "&4Your Death Chest is missing!");
-        deathMessage = ConfigurationEngine.setString(fileConfiguration, "Death message", "&aYour items have been moved to your Death Chest!");
+        chestCreationMessage = ConfigurationEngine.setString(fileConfiguration, "Chest creation message", "&8[ResurrectionChest] &aYou've created your Death Chest!");
+        chestDestructionMessage = ConfigurationEngine.setString(fileConfiguration, "Chest destruction message", "&8[ResurrectionChest] &cYour Death Chest has been destroyed!");
+        chestMissingMessage = ConfigurationEngine.setString(fileConfiguration, "Chest missing message", "&8[ResurrectionChest] &4Your Death Chest is missing!");
+        deathMessage = ConfigurationEngine.setString(fileConfiguration, "Death message", "&8[ResurrectionChest] &aYour items have been moved to your Death Chest!");
         enableParticleEffects = ConfigurationEngine.setBoolean(fileConfiguration, "Enable particle effects for death chests", true);
         particleEffect1 = ConfigurationEngine.setString(fileConfiguration, "Particle effect 1", "ENCHANTMENT_TABLE");
         particleEffect2 = ConfigurationEngine.setString(fileConfiguration, "Particle effect 2", "ENCHANTMENT_TABLE");
         particleEffect3 = ConfigurationEngine.setString(fileConfiguration, "Particle effect 3", "PORTAL");
-        blacklistedWorlds = ConfigurationEngine.setStringList(fileConfiguration, "blacklistedWorlds", Arrays.asList("none"));
+        blacklistedWorlds = ConfigurationEngine.setList(fileConfiguration, "blacklistedWorlds", Arrays.asList("none"));
         storeXP = ConfigurationEngine.setBoolean(fileConfiguration, "storeXP", true);
         xpPercentage = ConfigurationEngine.setDouble(fileConfiguration, "xpPercentageKept", 0.75);
-        ConfigurationEngine.fileSaverCustomValues(fileConfiguration, file);
+        deathChestNameTag = ConfigurationEngine.setString(fileConfiguration, "deathChestNameTag", "$playerName's &fResurrection Chest");
+        freeSingleDeathChestModelName = ConfigurationEngine.setString(fileConfiguration, "freeSingleDeathChestModelName", "resurrectionchest_free_single");
+        freeDoubleDeathChestModelName = ConfigurationEngine.setString(fileConfiguration, "freeDoubleDeathChestModelName", "resurrectionchest_free_double");
+        premiumSingleDeathChestModelName = ConfigurationEngine.setString(fileConfiguration, "premiumSingleDeathChestModelName", "resurrectionchest_angelic_single");
+        premiumDoubleDeathChestModelName = ConfigurationEngine.setString(fileConfiguration, "premiumDoubleDeathChestModelName", "resurrectionchest_angelic_double");
+        deathChestRemovedMessage = ConfigurationEngine.setString(fileConfiguration, "deathChestRemovedMessage", "&8[ResurrectionChest] &cYour Death Chest has been removed!");
     }
-
-    public static void reloadConfig() {
-
-        Bukkit.getPluginManager().getPlugin("ResurrectionChest").reloadConfig();
-
-    }
-
 }

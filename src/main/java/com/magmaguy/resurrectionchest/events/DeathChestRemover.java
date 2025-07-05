@@ -1,9 +1,8 @@
 package com.magmaguy.resurrectionchest.events;
 
-import com.magmaguy.resurrectionchest.ResurrectionChest;
-import com.magmaguy.resurrectionchest.ResurrectionChestObject;
 import com.magmaguy.resurrectionchest.configs.DefaultConfig;
 import com.magmaguy.resurrectionchest.configs.PlayerDataConfig;
+import com.magmaguy.resurrectionchest.ResurrectionChestObject;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -13,6 +12,7 @@ import org.bukkit.block.data.type.WallSign;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.SignChangeEvent;
 
 public class DeathChestRemover implements Listener {
 
@@ -20,44 +20,20 @@ public class DeathChestRemover implements Listener {
     public void onDeathChestBreak(BlockBreakEvent event) {
 
         if (event.isCancelled()) return;
-        if (event.getBlock().getType() == Material.ACACIA_WALL_SIGN ||
-                event.getBlock().getType() == Material.BIRCH_WALL_SIGN ||
-                event.getBlock().getType() == Material.DARK_OAK_WALL_SIGN ||
-                event.getBlock().getType() == Material.JUNGLE_WALL_SIGN ||
-                event.getBlock().getType() == Material.OAK_WALL_SIGN ||
-                event.getBlock().getType() == Material.SPRUCE_WALL_SIGN) {
+        if (!event.getBlock().getType().equals(Material.CHEST) && !event.getBlock().getType().toString().endsWith("_SIGN")) return;
 
-            WallSign sign = (WallSign) event.getBlock().getBlockData();
-            Block attached = event.getBlock().getRelative(sign.getFacing().getOppositeFace());
-
-            Location attachedLocation = attached.getLocation();
-
-            ResurrectionChestObject resurrectionChest = ResurrectionChestObject.getResurrectionChest(attachedLocation);
-            if (resurrectionChest != null)
-                unregisterDeathChestEntry(attachedLocation);
-
-        }
-
-
-        if (event.getBlock().getType().equals(Material.CHEST))
-            unregisterDeathChestEntry(event.getBlock().getLocation());
-
+        ResurrectionChestObject resurrectionChest = ResurrectionChestObject.getResurrectionChest(event.getBlock().getLocation());
+        if (resurrectionChest == null) return;
+        resurrectionChest.remove();
     }
 
-    public static void unregisterDeathChestEntry(Location location) {
+    @EventHandler
+    public void onEditSign(SignChangeEvent event) {
+        if (event.isCancelled()) return;
+        if (!event.getBlock().getType().toString().endsWith("WALL_SIGN")) return;
 
-        ResurrectionChestObject resurrectionChestObject = ResurrectionChestObject.getResurrectionChest(location);
-        if (resurrectionChestObject == null) return;
-
-        resurrectionChestObject.remove();
-
-        PlayerDataConfig.removePlayerData(resurrectionChestObject.getUuid());
-
-        if (Bukkit.getPlayer(resurrectionChestObject.getUuid()).isOnline())
-            Bukkit.getPlayer(resurrectionChestObject.getUuid()).sendMessage(ChatColor.translateAlternateColorCodes('&', DefaultConfig.chestDestructionMessage));
-
-        ResurrectionChestObject.getResurrectionChests().remove(resurrectionChestObject.getUuid());
-
+        ResurrectionChestObject resurrectionChest = ResurrectionChestObject.getResurrectionChest(event.getBlock().getLocation());
+        if (resurrectionChest == null) return;
+        event.setCancelled(true);
     }
-
 }
