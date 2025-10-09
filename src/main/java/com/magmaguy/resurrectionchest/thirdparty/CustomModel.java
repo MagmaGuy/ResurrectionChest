@@ -1,9 +1,14 @@
 package com.magmaguy.resurrectionchest.thirdparty;
 
+import com.magmaguy.freeminecraftmodels.FreeMinecraftModels;
 import com.magmaguy.freeminecraftmodels.MetadataHandler;
+import com.magmaguy.freeminecraftmodels.api.ModeledEntityManager;
 import com.magmaguy.freeminecraftmodels.config.props.PropBlocks;
+import com.magmaguy.freeminecraftmodels.customentity.ModeledEntity;
 import com.magmaguy.freeminecraftmodels.customentity.PropEntity;
+import com.magmaguy.freeminecraftmodels.dataconverter.FileModelConverter;
 import com.magmaguy.magmacore.util.Logger;
+import com.magmaguy.resurrectionchest.ResurrectionChest;
 import com.magmaguy.resurrectionchest.ResurrectionChestObject;
 import com.magmaguy.resurrectionchest.configs.DefaultConfig;
 import org.bukkit.*;
@@ -17,7 +22,7 @@ import java.util.List;
 import java.util.UUID;
 
 public class CustomModel {
-    public final static NamespacedKey RESURRECTIONCHEST_OWNER = new NamespacedKey(MetadataHandler.PLUGIN, "resurrectionchest_owner");
+    public final static NamespacedKey RESURRECTIONCHEST_OWNER = new NamespacedKey(ResurrectionChest.plugin, "resurrectionchest_owner");
     public final ResurrectionChestObject resurrectionChestObject;
     private final PropEntity propEntity;
 
@@ -53,7 +58,7 @@ public class CustomModel {
     }
 
     public static CustomModel CreateChestProp(Location location, UUID uuid, ResurrectionChestObject resurrectionChestObject, String modelName) {
-        if (!FMMIsEnabled()) return null;
+        if (!FMMIsEnabled() || FileModelConverter.getConvertedFileModels().get(modelName) == null) return null;
         return new CustomModel(location, uuid, resurrectionChestObject, modelName);
     }
 

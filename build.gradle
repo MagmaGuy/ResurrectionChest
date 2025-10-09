@@ -10,7 +10,7 @@ compileJava.options.encoding = "UTF-8"
 compileTestJava.options.encoding = "UTF-8"
 
 group = "com.magmaguy"
-version = "2.0.0"
+version = "2.0.1"
 description = "ResurrectionChest"
 
 repositories {
@@ -44,7 +44,7 @@ dependencies {
     //BStats API
     implementation group: 'org.bstats', name: 'bstats-bukkit', version: '2.2.1'
     //MagmaCore
-    implementation (group: 'com.magmaguy', name: 'MagmaCore', version: '1.17-SNAPSHOT'){
+    implementation (group: 'com.magmaguy', name: 'MagmaCore', version: '1.18-SNAPSHOT'){
         changing = true
     }
     compileOnly (group: 'com.magmaguy', name: 'FreeMinecraftModels', version: '2.3.0'){

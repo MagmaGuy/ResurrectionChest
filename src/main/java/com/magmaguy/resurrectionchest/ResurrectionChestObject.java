@@ -1,5 +1,6 @@
 package com.magmaguy.resurrectionchest;
 
+import com.magmaguy.freeminecraftmodels.dataconverter.FileModelConverter;
 import com.magmaguy.magmacore.util.ChunkLocationChecker;
 import com.magmaguy.magmacore.util.Logger;
 import com.magmaguy.resurrectionchest.configs.DefaultConfig;
@@ -46,7 +47,7 @@ public class ResurrectionChestObject implements PersistentObject {
     public ResurrectionChestObject(Player player, Location location) {
         this.uuid = player.getUniqueId();
         this.location = location;
-        this.modelName = determineModelName(player);
+        if (CustomModel.FMMIsEnabled()) this.modelName = determineModelName(player);
         resurrectionChests.put(uuid, this);
         setIsDoubleChest();
         calculateCenterLocation();
@@ -145,7 +146,7 @@ public class ResurrectionChestObject implements PersistentObject {
     }
 
     private String determineModelName(Player player) {
-        if (player.hasPermission("resurrectionchest.model.premium")) {
+        if (player.hasPermission("resurrectionchest.model.premium") && FileModelConverter.getConvertedFileModels().get(DefaultConfig.premiumSingleDeathChestModelName) != null) {
             return "resurrectionchest_angelic";
         } else if (player.hasPermission("resurrectionchest.model.free")) {
             return "resurrectionchest_free";
@@ -243,6 +244,7 @@ public class ResurrectionChestObject implements PersistentObject {
      * The model isn't manually removed on chunk unload because it is not persistent
      */
     private void spawnCustomModel() {
+        if (!CustomModel.FMMIsEnabled()) return;
         if (customModel != null) customModel.remove();
         if (modelName.equals("none")) return;
         String finalModelName = modelName + (isDoubleChest() ? "_double" : "_single");

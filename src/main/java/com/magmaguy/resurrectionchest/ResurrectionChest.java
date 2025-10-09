@@ -32,7 +32,7 @@ public class ResurrectionChest extends JavaPlugin implements Listener {
         MagmaCore.onEnable();
         MagmaCore.initializeImporter();
 
-        MagmaCore.checkVersionUpdate("57541");
+        MagmaCore.checkVersionUpdate("57541", "https://nightbreak.io/plugin/resurrectionchest/");
 
         new DefaultConfig();
         new PlayerDataConfig();
