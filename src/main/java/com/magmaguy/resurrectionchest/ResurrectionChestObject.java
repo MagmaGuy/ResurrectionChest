@@ -143,8 +143,8 @@ public class ResurrectionChestObject implements PersistentObject {
         for (String uuidString : PlayerDataConfig.getInstance().getFileConfiguration().getKeys(false)) {
             try {
                 UUID uuid = UUID.fromString(uuidString);
-                PlayerDataConfig.PlayerData playerData = PlayerDataConfig.getPlayerData(uuid);
-                new ResurrectionChestObject(uuid, playerData.location().toString(), playerData.chestModel());
+                PlayerDataConfig.RawPlayerData rawData = PlayerDataConfig.getRawPlayerData(uuid);
+                new ResurrectionChestObject(uuid, rawData.locationString(), rawData.chestModel());
             } catch (Exception e) {
                 Logger.warn("Failed to load resurrection chest for player " + uuidString + ": " + e.getMessage());
             }

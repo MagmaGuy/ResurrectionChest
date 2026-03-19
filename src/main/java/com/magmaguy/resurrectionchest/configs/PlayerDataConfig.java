@@ -8,6 +8,7 @@ import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
+import org.bukkit.entity.Player;
 import org.bukkit.configuration.file.FileConfiguration;
 
 import java.io.File;
@@ -21,6 +22,9 @@ public class PlayerDataConfig extends ConfigurationFile {
     private static PlayerDataConfig instance;
 
     public record PlayerData(Location location, String chestModel) {
+    }
+
+    public record RawPlayerData(String locationString, String chestModel) {
     }
 
     public PlayerDataConfig() {
@@ -48,11 +52,19 @@ public class PlayerDataConfig extends ConfigurationFile {
         return new PlayerData(location, chestModel);
     }
 
+    public static RawPlayerData getRawPlayerData(UUID uuid) {
+        Map<String, Object> data = instance.fileConfiguration.getConfigurationSection(uuid.toString()).getValues(false);
+        String locationString = (String) data.get("location");
+        String chestModel = (String) data.get("chestModel");
+        return new RawPlayerData(locationString, chestModel);
+    }
+
     public static void unregisterDeathChestEntry(ResurrectionChestObject resurrectionChestObject) {
         PlayerDataConfig.removePlayerData(resurrectionChestObject.getUuid());
 
-        if (Bukkit.getPlayer(resurrectionChestObject.getUuid()).isOnline())
-            Bukkit.getPlayer(resurrectionChestObject.getUuid()).sendMessage(ChatColor.translateAlternateColorCodes('&', DefaultConfig.chestDestructionMessage));
+        Player player = Bukkit.getPlayer(resurrectionChestObject.getUuid());
+        if (player != null && player.isOnline())
+            player.sendMessage(ChatColor.translateAlternateColorCodes('&', DefaultConfig.chestDestructionMessage));
 
         ResurrectionChestObject.getResurrectionChests().remove(resurrectionChestObject.getUuid());
     }

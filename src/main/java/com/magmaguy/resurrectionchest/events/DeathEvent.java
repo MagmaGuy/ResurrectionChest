@@ -3,6 +3,7 @@ package com.magmaguy.resurrectionchest.events;
 import com.magmaguy.resurrectionchest.configs.DefaultConfig;
 import com.magmaguy.resurrectionchest.ResurrectionChestObject;
 import org.bukkit.ChatColor;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.Chest;
@@ -25,7 +26,7 @@ import java.util.List;
 public class DeathEvent implements Listener {
     HashMap<Player, Integer> xp = new HashMap<>();
 
-    @EventHandler(priority = EventPriority.MONITOR)
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onDeath(PlayerDeathEvent event) {
 
         if (DefaultConfig.blacklistedWorlds.contains(event.getEntity().getWorld().getName())) return;
@@ -38,7 +39,16 @@ public class DeathEvent implements Listener {
         if (resurrectionChestObject == null || resurrectionChestObject.getLocation() == null || resurrectionChestObject.getLocation().getWorld() == null)
             return;
 
-        Block deathChestBlock = resurrectionChestObject.getLocation().getBlock();
+        Location chestLocation = resurrectionChestObject.getLocation();
+
+        // Ensure the chunk containing the death chest is loaded before accessing the block.
+        // If the player dies far from their chest the chunk may be unloaded, which can cause
+        // the block type check to fail and incorrectly unregister the chest.
+        if (!chestLocation.getWorld().isChunkLoaded(chestLocation.getBlockX() >> 4, chestLocation.getBlockZ() >> 4)) {
+            chestLocation.getWorld().getChunkAt(chestLocation);
+        }
+
+        Block deathChestBlock = chestLocation.getBlock();
 
         if (!deathChestBlock.getType().equals(Material.CHEST)) {
             player.sendMessage(ChatColor.translateAlternateColorCodes('&', DefaultConfig.chestMissingMessage));
@@ -48,7 +58,7 @@ public class DeathEvent implements Listener {
 
         Chest deathChest = (Chest) deathChestBlock.getState();
 
-        List<ItemStack> dropList = event.getDrops();
+        List<ItemStack> dropList = new ArrayList<>(event.getDrops());
         List<ItemStack> overflowList = new ArrayList<>();
 
         for (ItemStack itemStack : dropList)
