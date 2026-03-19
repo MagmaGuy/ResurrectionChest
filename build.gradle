@@ -75,6 +75,7 @@ shadowJar {
     dependencies {
         relocate('org.bstats', packagePath + '.bstats')
     }
+    relocate 'com.magmaguy.easyminecraftgoals', 'com.magmaguy.resurrectionchest.easyminecraftgoals'
     archiveClassifier.set(null)
     archiveFileName.set(project.name + ".jar")
     destinationDirectory.set(new File("output"))
