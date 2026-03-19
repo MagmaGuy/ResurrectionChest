@@ -2,19 +2,19 @@ package com.magmaguy.resurrectionchest.configs;
 
 import com.magmaguy.magmacore.config.ConfigurationEngine;
 import com.magmaguy.magmacore.config.ConfigurationFile;
-import org.bukkit.Bukkit;
-import org.bukkit.configuration.file.FileConfiguration;
 
-import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 
 public class DefaultConfig extends ConfigurationFile {
+    private static DefaultConfig instance;
 
     public DefaultConfig() {
         super("config.yml");
+        instance = this;
     }
 
+    public static boolean setupDone;
     public static String resurrectionChestSignName;
     public static boolean enableHighCompatibility;
     public static boolean enableDurabilityLossOnDeath;
@@ -37,8 +37,18 @@ public class DefaultConfig extends ConfigurationFile {
     public static String premiumDoubleDeathChestModelName;
     public static String deathChestRemovedMessage;
 
+    public static boolean isSetupDone() {
+        return setupDone;
+    }
+
+    public static void toggleSetupDone(boolean value) {
+        setupDone = value;
+        ConfigurationEngine.writeValue(setupDone, instance.file, instance.getFileConfiguration(), "setupDone");
+    }
+
     @Override
     public void initializeValues() {
+        setupDone = ConfigurationEngine.setBoolean(fileConfiguration, "setupDone", false);
         resurrectionChestSignName = ConfigurationEngine.setString(fileConfiguration, "Input name for death chest", "[DeathChest]");
         enableHighCompatibility = ConfigurationEngine.setBoolean(fileConfiguration, "Enable high compatibility / low security mode for plugin conflicts", false);
         enableDurabilityLossOnDeath = ConfigurationEngine.setBoolean(fileConfiguration, "Lower worn armor's durability on death", true);
