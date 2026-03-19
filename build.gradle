@@ -44,7 +44,7 @@ dependencies {
     //BStats API
     implementation group: 'org.bstats', name: 'bstats-bukkit', version: '2.2.1'
     //MagmaCore
-    implementation (group: 'com.magmaguy', name: 'MagmaCore', version: '1.29-SNAPSHOT'){
+    implementation (group: 'com.magmaguy', name: 'MagmaCore', version: '2.0.0-SNAPSHOT'){
         changing = true
     }
     compileOnly (group: 'com.magmaguy', name: 'FreeMinecraftModels', version: '2.4.0'){
