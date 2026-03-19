@@ -2,7 +2,7 @@ plugins {
     id 'java-library'
     id 'idea'
     id 'maven-publish'
-    id "com.github.johnrengelman.shadow" version "7.0.0"
+    id "com.gradleup.shadow" version "8.3.5"
 }
 
 //Fixes issues related to special characters being used
@@ -10,7 +10,7 @@ compileJava.options.encoding = "UTF-8"
 compileTestJava.options.encoding = "UTF-8"
 
 group = "com.magmaguy"
-version = "2.0.1"
+version = "2.0.2"
 description = "ResurrectionChest"
 
 repositories {
@@ -40,19 +40,24 @@ repositories {
 
 dependencies {
     //Spigot API
-    compileOnly "org.spigotmc:spigot-api:1.20.4-R0.1-SNAPSHOT"
+    compileOnly "org.spigotmc:spigot-api:1.21.4-R0.1-SNAPSHOT"
     //BStats API
     implementation group: 'org.bstats', name: 'bstats-bukkit', version: '2.2.1'
     //MagmaCore
-    implementation (group: 'com.magmaguy', name: 'MagmaCore', version: '1.18-SNAPSHOT'){
+    implementation (group: 'com.magmaguy', name: 'MagmaCore', version: '1.29-SNAPSHOT'){
         changing = true
     }
-    compileOnly (group: 'com.magmaguy', name: 'FreeMinecraftModels', version: '2.3.0'){
+    compileOnly (group: 'com.magmaguy', name: 'FreeMinecraftModels', version: '2.4.0'){
         changing = true
     }
+    implementation group: 'org.reflections', name: 'reflections', version: '0.10.2'
     //lombok
     compileOnly 'org.projectlombok:lombok:1.18.34'
     annotationProcessor 'org.projectlombok:lombok:1.18.34'
+}
+
+configurations.all {
+    resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
 }
 
 artifacts { // task 'build' runs generates uberjar
@@ -77,6 +82,12 @@ shadowJar {
 
 tasks.withType(JavaCompile) {
     options.encoding = 'UTF-8'
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
 }
 
 ext {

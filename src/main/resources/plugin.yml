@@ -1,11 +1,23 @@
 name: ResurrectionChest
-version: 2.0.1
+version: 2.0.2
 author: MagmaGuy
 main: com.magmaguy.resurrectionchest.ResurrectionChest
 load: POSTWORLD
 softdepend: [Multiverse-Core, FreeMinecraftModels]
 api-version: 1.13
+commands:
+  resurrectionchest:
+    description: Main command
 permissions:
+  resurrectionchest.*:
+    description: Gives admins access to the setup, initialize, Nightbreak content, and reload commands.
+    default: op
+  resurrectionchest.setup:
+    description: Gives admins access to the /resurrectionchest setup command.
+    default: op
+  resurrectionchest.initialize:
+    description: Gives admins access to the /resurrectionchest initialize command.
+    default: op
   resurrectionchest.use:
     description: Allows players to use the plugin. This includes both chest creation and items going to chest upon death.
     default: true

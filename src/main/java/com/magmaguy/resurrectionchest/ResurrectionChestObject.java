@@ -114,6 +114,12 @@ public class ResurrectionChestObject implements PersistentObject {
         }
     }
 
+    public static void refreshAllModels() {
+        for (ResurrectionChestObject resurrectionChestObject : resurrectionChests.values()) {
+            resurrectionChestObject.refreshCustomModel();
+        }
+    }
+
     public static ResurrectionChestObject getResurrectionChest(Player player) {
         if (!resurrectionChests.containsKey(player.getUniqueId()))
             return null;
@@ -190,12 +196,7 @@ public class ResurrectionChestObject implements PersistentObject {
 
     public void setChestHasChanged(boolean chestHasChanged) {
         this.chestHasChanged = chestHasChanged;
-        calculateCenterLocation();
-        setIsDoubleChest();
-        if (customModel != null) {
-            customModel.remove();
-            spawnCustomModel();
-        }
+        refreshCustomModel();
     }
 
     public List<Location> getAllSigns() {
@@ -251,10 +252,21 @@ public class ResurrectionChestObject implements PersistentObject {
         customModel = CustomModel.CreateChestProp(centerLocation, uuid, this, finalModelName);
     }
 
+    public void refreshCustomModel() {
+        calculateCenterLocation();
+        setIsDoubleChest();
+        if (customModel != null) {
+            customModel.remove();
+            customModel = null;
+        }
+        spawnCustomModel();
+    }
+
     private void tick() {
         if (!DefaultConfig.enableParticleEffects) return;
         //prevent ticking if the chunk is not loaded
-        if (!isLoaded)             return;
+        isLoaded = ChunkLocationChecker.chunkAtLocationIsLoaded(location);
+        if (!isLoaded) return;
         doParticleEffects();
     }
 
