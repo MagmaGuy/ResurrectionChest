@@ -2,7 +2,7 @@ plugins {
     id 'java-library'
     id 'idea'
     id 'maven-publish'
-    id "com.gradleup.shadow" version "8.3.5"
+    id "com.gradleup.shadow" version "9.0.0-beta12"
 }
 
 //Fixes issues related to special characters being used
@@ -10,7 +10,7 @@ compileJava.options.encoding = "UTF-8"
 compileTestJava.options.encoding = "UTF-8"
 
 group = "com.magmaguy"
-version = "2.0.2"
+version = "2.1.0"
 description = "ResurrectionChest"
 
 repositories {
@@ -34,7 +34,6 @@ repositories {
     maven { url = "https://repo.magmaguy.com/snapshots" }
 
     mavenCentral()
-    jcenter()
     mavenLocal()
 }
 
@@ -44,13 +43,15 @@ dependencies {
     //BStats API
     implementation group: 'org.bstats', name: 'bstats-bukkit', version: '2.2.1'
     //MagmaCore
-    implementation (group: 'com.magmaguy', name: 'MagmaCore', version: '2.0.0-SNAPSHOT'){
+    implementation (group: 'com.magmaguy', name: 'MagmaCore', version: '2.2.0-SNAPSHOT'){
         changing = true
     }
-    compileOnly (group: 'com.magmaguy', name: 'FreeMinecraftModels', version: '2.4.0'){
+    compileOnly (group: 'com.magmaguy', name: 'FreeMinecraftModels', version: '2.7.0'){
         changing = true
     }
-    implementation group: 'org.reflections', name: 'reflections', version: '0.10.2'
+    // org.reflections removed: nothing in src/ uses it, and it bundled
+    // jsr305/javassist/slf4j-api transitives that duplicate what MagmaCore
+    // already shades, causing Paper's plugin remapper to refuse the jar.
     //lombok
     compileOnly 'org.projectlombok:lombok:1.18.34'
     annotationProcessor 'org.projectlombok:lombok:1.18.34'

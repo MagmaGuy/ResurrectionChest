@@ -86,6 +86,7 @@ public class DeathEvent implements Listener {
 
     @EventHandler(ignoreCancelled = true)
     public void onChestOpen(PlayerInteractEvent event) {
+        if (event.getClickedBlock() == null) return;
         if (event.getClickedBlock().getType() != Material.CHEST &&
                 event.getClickedBlock().getType() != Material.TRAPPED_CHEST &&
                 event.getClickedBlock().getType() != Material.SHULKER_BOX)
