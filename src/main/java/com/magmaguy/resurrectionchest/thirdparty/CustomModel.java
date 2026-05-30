@@ -64,11 +64,17 @@ public class CustomModel {
 
     private void setupResurrectionChestCallbacks(UUID ownerUuid, Location chestLocation) {
         propEntity
-                // Left click callback - destroy the chest
+                // Left click callback - destroy the chest (requires sneaking to prevent accidents)
                 .setLeftClickCallback((player, entity) -> {
                     // Check if player owns this chest
                     if (!ownerUuid.equals(player.getUniqueId())) {
                         player.sendMessage(ChatColor.RED + "You can only destroy your own resurrection chest!");
+                        return;
+                    }
+
+                    // Require sneaking to prevent accidental destruction
+                    if (!player.isSneaking()) {
+                        player.sendMessage(ChatColor.YELLOW + "Sneak + left-click to destroy your resurrection chest. Right-click to open it.");
                         return;
                     }
 
@@ -79,14 +85,15 @@ public class CustomModel {
                 })
                 // Right click callback - open the chest
                 .setRightClickCallback((player, entity) -> {
-                    // Check if there's still a chest block at the location
-                    if (chestLocation.getBlock().getType() != Material.CHEST) {
+                    // Use the resurrection chest object's canonical location for the block check
+                    Location actualChestLocation = resurrectionChestObject.getLocation();
+                    if (actualChestLocation == null || actualChestLocation.getBlock().getType() != Material.CHEST) {
                         player.sendMessage(ChatColor.RED + "The chest block is missing!");
                         return;
                     }
 
                     // Get the chest tile entity and open it
-                    Chest chestBlock = (Chest) chestLocation.getBlock().getState();
+                    Chest chestBlock = (Chest) actualChestLocation.getBlock().getState();
                     Inventory chestInventory = chestBlock.getInventory();
 
                     // Play chest open sound
@@ -108,6 +115,27 @@ public class CustomModel {
                         }
                     }.runTaskTimer(MetadataHandler.PLUGIN, 0, 1);
                 });
+    }
+
+    public void refreshPropBlocks() {
+        if (propEntity != null) {
+            new BukkitRunnable() {
+                int counter = 0;
+
+                @Override
+                public void run() {
+                    if (propEntity == null) {
+                        cancel();
+                        return;
+                    }
+                    propEntity.showFakePropBlocksToAllPlayers();
+                    counter++;
+                    if (counter > 2) {
+                        cancel();
+                    }
+                }
+            }.runTaskTimer(MetadataHandler.PLUGIN, 2, 5);
+        }
     }
 
     public void remove() {

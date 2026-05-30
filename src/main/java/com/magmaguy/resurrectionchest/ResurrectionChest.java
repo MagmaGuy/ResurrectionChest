@@ -6,7 +6,6 @@ import com.magmaguy.magmacore.initialization.PluginInitializationConfig;
 import com.magmaguy.magmacore.initialization.PluginInitializationContext;
 import com.magmaguy.magmacore.initialization.PluginInitializationState;
 import com.magmaguy.magmacore.nightbreak.NightbreakFirstTimeSetupSpec;
-import com.magmaguy.magmacore.nightbreak.NightbreakFirstTimeSetupWarner;
 import com.magmaguy.magmacore.nightbreak.NightbreakPluginBootstrap;
 import com.magmaguy.magmacore.nightbreak.NightbreakPluginHooks;
 import com.magmaguy.magmacore.nightbreak.NightbreakPluginSpec;
@@ -21,6 +20,7 @@ import com.magmaguy.resurrectionchest.events.DeathChestConstructor;
 import com.magmaguy.resurrectionchest.events.DeathChestRemover;
 import com.magmaguy.resurrectionchest.events.DeathEvent;
 import com.magmaguy.resurrectionchest.listeners.ModelInstallationListener;
+import com.magmaguy.resurrectionchest.listeners.ResurrectionChestFirstTimeSetupWarner;
 import com.magmaguy.resurrectionchest.menus.ResurrectionChestFirstTimeSetupMenu;
 import com.magmaguy.resurrectionchest.menus.ResurrectionChestSetupMenu;
 import org.bstats.bukkit.Metrics;
@@ -95,6 +95,7 @@ public class ResurrectionChest extends JavaPlugin {
     @Override
     public void onLoad() {
         MagmaCore.createInstance(this);
+        MagmaCore.exportSharedAssets(this);
     }
 
     @Override
@@ -137,7 +138,7 @@ public class ResurrectionChest extends JavaPlugin {
         this.getServer().getPluginManager().registerEvents(new DeathChestRemover(), this);
         this.getServer().getPluginManager().registerEvents(new DeathEvent(), this);
         this.getServer().getPluginManager().registerEvents(new PersistentObjectHandler.PersistentObjectHandlerEvents(), this);
-        this.getServer().getPluginManager().registerEvents(new NightbreakFirstTimeSetupWarner(this, FIRST_TIME_SETUP_SPEC, DefaultConfig::isSetupDone), this);
+        this.getServer().getPluginManager().registerEvents(new ResurrectionChestFirstTimeSetupWarner(this), this);
         this.getServer().getPluginManager().registerEvents(new ModelInstallationListener(), this);
 
         initializationContext.step("Commands");

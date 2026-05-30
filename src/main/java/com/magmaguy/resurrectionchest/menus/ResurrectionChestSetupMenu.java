@@ -10,6 +10,7 @@ import com.magmaguy.magmacore.util.Logger;
 import com.magmaguy.magmacore.util.SpigotMessage;
 import com.magmaguy.resurrectionchest.MetadataHandler;
 import com.magmaguy.resurrectionchest.config.contentpackages.ContentPackageConfigFields;
+import com.magmaguy.resurrectionchest.configs.DefaultConfig;
 import com.magmaguy.resurrectionchest.content.RCPackage;
 import com.magmaguy.resurrectionchest.content.RCPackageRefresher;
 import org.bukkit.Bukkit;
@@ -29,6 +30,10 @@ public class ResurrectionChestSetupMenu {
     }
 
     public static void createMenu(Player player) {
+        if (!DefaultConfig.isSetupDone()) {
+            DefaultConfig.toggleSetupDone(true);
+        }
+
         List<RCPackage> packages = new ArrayList<>(RCPackage.getRcPackages().values()).stream()
                 .sorted(Comparator.comparing(pkg ->
                         ChatColor.stripColor(ChatColorConverter.convert(pkg.getContentPackageConfigFields().getName()))))

@@ -322,6 +322,7 @@ public class ResurrectionChestObject implements PersistentObject {
     @Override
     public void chunkLoad() {
         spawnCustomModel();
+        if (customModel != null) customModel.refreshPropBlocks();
         isLoaded = true;
     }
 
