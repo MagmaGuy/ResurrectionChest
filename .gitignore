@@ -1,3 +1,6 @@
 /build/
 # Local design docs and plan notes - not tracked
 docs/
+# Build/IDE artifacts - not tracked
+.gradle/
+output/
