@@ -39,7 +39,7 @@ public class PlayerDataConfig extends ConfigurationFile {
 
     public static void addPlayerdata(UUID uuid, Location location, String chestModel) {
         Map<String, Object> playerData = new HashMap<>();
-        playerData.put("location", location.toString());
+        playerData.put("location", LocationParser.serializeLocation(location));
         playerData.put("chestModel", chestModel);
         instance.fileConfiguration.set(uuid.toString(), playerData);
         ConfigurationEngine.fileSaverCustomValues(instance.fileConfiguration, instance.file);
