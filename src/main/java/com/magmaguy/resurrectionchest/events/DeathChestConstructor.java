@@ -42,12 +42,13 @@ public class DeathChestConstructor implements Listener {
 
         if (ResurrectionChestObject.getResurrectionChest(event.getPlayer()) != null)
             ResurrectionChestObject.getResurrectionChest(event.getPlayer()).remove();
-        new ResurrectionChestObject(event.getPlayer(), spawnLocation);
+        ResurrectionChestObject resurrectionChestObject = new ResurrectionChestObject(event.getPlayer(), spawnLocation);
 
         event.setLine(0, "");
         event.setLine(1, ChatColor.translateAlternateColorCodes('&', "&5" + DefaultConfig.resurrectionChestSignName));
         event.setLine(2, event.getPlayer().getDisplayName());
         event.setLine(3, "");
+        Bukkit.getScheduler().runTask(ResurrectionChest.plugin, resurrectionChestObject::markTrackedBlocks);
 
         event.getPlayer().sendMessage(ChatColor.translateAlternateColorCodes('&', DefaultConfig.chestCreationMessage));
     }

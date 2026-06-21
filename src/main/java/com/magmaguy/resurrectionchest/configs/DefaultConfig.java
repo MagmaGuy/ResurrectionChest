@@ -2,6 +2,7 @@ package com.magmaguy.resurrectionchest.configs;
 
 import com.magmaguy.magmacore.config.ConfigurationEngine;
 import com.magmaguy.magmacore.config.ConfigurationFile;
+import com.magmaguy.magmacore.nightbreak.NightbreakPluginUpdater;
 
 import java.util.Arrays;
 import java.util.List;
@@ -17,6 +18,7 @@ public class DefaultConfig extends ConfigurationFile {
     public static boolean setupDone;
     public static String resurrectionChestSignName;
     public static boolean enableHighCompatibility;
+    public static boolean autoDownloadPluginUpdates;
     public static boolean enableDurabilityLossOnDeath;
     public static int durabilityToLower;
     public static String chestCreationMessage;
@@ -49,6 +51,7 @@ public class DefaultConfig extends ConfigurationFile {
     @Override
     public void initializeValues() {
         setupDone = ConfigurationEngine.setBoolean(fileConfiguration, "setupDone", false);
+        autoDownloadPluginUpdates = NightbreakPluginUpdater.setAutoDownloadConfigDefault(fileConfiguration);
         resurrectionChestSignName = ConfigurationEngine.setString(fileConfiguration, "Input name for death chest", "[DeathChest]");
         enableHighCompatibility = ConfigurationEngine.setBoolean(fileConfiguration, "Enable high compatibility / low security mode for plugin conflicts", false);
         enableDurabilityLossOnDeath = ConfigurationEngine.setBoolean(fileConfiguration, "Lower worn armor's durability on death", true);

@@ -30,7 +30,7 @@ custom FreeMinecraftModels chest props for Nightbreak content packs.
 2. Start the server once to generate the configuration files.
 3. Give players `resurrectionchest.use` if your permissions plugin does not use Bukkit defaults.
 4. To create a vanilla resurrection chest, place a chest and attach a sign containing `[DeathChest]`.
-5. Optional: install FreeMinecraftModels, then run `/resurrectionchest setup` or `/resurrectionchest downloadall` to
+5. Optional: install FreeMinecraftModels, then run `/resurrectionchest setup` or `/resurrectionchest downloadallcontent` to
    install Nightbreak-managed chest model packs.
 
 ## Commands
@@ -42,7 +42,9 @@ All commands are under `/resurrectionchest`.
 | `/resurrectionchest` | Shows plugin info and points admins to setup commands. |
 | `/resurrectionchest setup` | Opens the Nightbreak content setup and management menu. |
 | `/resurrectionchest initialize` | Opens the first-time setup flow. |
-| `/resurrectionchest downloadall` | Downloads all available ResurrectionChest content packs for linked Nightbreak accounts. |
+| `/resurrectionchest downloadallcontent` | Downloads all available ResurrectionChest content packs for linked Nightbreak accounts. |
+| `/resurrectionchest downloadall` | Checks for a plugin update and downloads all available content packs. |
+| `/resurrectionchest downloadpluginupdate` | Downloads only the plugin update when Nightbreak has a newer release. |
 | `/resurrectionchest updatecontent` | Updates installed ResurrectionChest content packs. |
 | `/resurrectionchest reload` | Reloads the plugin. |
 

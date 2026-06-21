@@ -1,5 +1,5 @@
 name: ResurrectionChest
-version: 2.1.1
+version: 2.2.0
 author: MagmaGuy
 main: com.magmaguy.resurrectionchest.ResurrectionChest
 load: POSTWORLD
@@ -10,7 +10,7 @@ commands:
     description: Main command
 permissions:
   resurrectionchest.*:
-    description: Gives admins access to the setup, initialize, Nightbreak content, and reload commands.
+    description: Gives admins access to the setup, initialize, content, and reload commands.
     default: op
   resurrectionchest.setup:
     description: Gives admins access to the /resurrectionchest setup command.

@@ -1,7 +1,6 @@
 package com.magmaguy.resurrectionchest;
 
 import com.google.common.collect.ArrayListMultimap;
-import com.magmaguy.magmacore.util.Logger;
 import com.magmaguy.resurrectionchest.utils.ChunkVectorizer;
 import lombok.Getter;
 import org.bukkit.Bukkit;
@@ -69,13 +68,13 @@ This ArrayListMultiMap keeps two types of string keys: The first type is a world
     }
 
     public void worldLoad(World world) {
-        //run implementations
-        persistentObject.worldLoad(world);
         //convert persistent object handler to chunk-based detection
         //Start by removing old key
         remove();
         //Assign world to the location
         this.persistentLocation.setWorld(world);
+        //run implementations
+        persistentObject.worldLoad(world);
         //Assign key
         addChunkKey(this);
 
@@ -113,13 +112,15 @@ This ArrayListMultiMap keeps two types of string keys: The first type is a world
          * Behavior that runs when a chunk loads, spawning the entity
          */
         private static void loadChunk(List<PersistentObjectHandler> persistentObjectHandlers) {
-            persistentObjectHandlers.forEach(persistentObjectHandler -> persistentObjectHandler.persistentObject.chunkLoad());
+            for (PersistentObjectHandler persistentObjectHandler : persistentObjectHandlers) {
+                persistentObjectHandler.persistentObject.chunkLoad();
+            }
         }
 
         private static void unloadChunk(List<PersistentObjectHandler> persistentObjectHandlers) {
-            persistentObjectHandlers.forEach(persistentObjectHandler -> {
+            for (PersistentObjectHandler persistentObjectHandler : persistentObjectHandlers) {
                 persistentObjectHandler.persistentObject.chunkUnload();
-            });
+            }
         }
 
         private static void unloadWorld(World world) {
@@ -127,12 +128,16 @@ This ArrayListMultiMap keeps two types of string keys: The first type is a world
             for (PersistentObjectHandler persistentObjectHandler : persistentObjects.values())
                 if (Objects.equals(persistentObjectHandler.worldName, world.getName()))
                     copy.add(persistentObjectHandler);
-            copy.forEach(PersistentObjectHandler::worldUnload);
+            for (PersistentObjectHandler persistentObjectHandler : copy) {
+                persistentObjectHandler.worldUnload();
+            }
         }
 
         private static void loadWorld(World world) {
             List<PersistentObjectHandler> copy = new ArrayList<>(persistentObjects.get(world.getName()));
-            copy.forEach(persistentObjectHandler -> persistentObjectHandler.worldLoad(world));
+            for (PersistentObjectHandler persistentObjectHandler : copy) {
+                persistentObjectHandler.worldLoad(world);
+            }
         }
 
         //Store world names and serialized locations
@@ -140,6 +145,7 @@ This ArrayListMultiMap keeps two types of string keys: The first type is a world
         public void chunkLoadEvent(ChunkLoadEvent event) {
             int chunkLocation = chunkLocation(event.getChunk());
             List<PersistentObjectHandler> simplePersistentEntityList = new ArrayList<>(persistentObjects.get(chunkLocation + ""));
+            if (simplePersistentEntityList.isEmpty()) return;
             Bukkit.getScheduler().scheduleSyncDelayedTask(MetadataHandler.PLUGIN, () -> loadChunk(simplePersistentEntityList), 1L);
         }
 
@@ -157,6 +163,7 @@ This ArrayListMultiMap keeps two types of string keys: The first type is a world
         public void chunkUnloadEvent(ChunkUnloadEvent event) {
             int chunkLocation = chunkLocation(event.getChunk());
             List<PersistentObjectHandler> simplePersistentEntityList = new ArrayList<>(persistentObjects.get(chunkLocation + ""));
+            if (simplePersistentEntityList.isEmpty()) return;
             unloadChunk(simplePersistentEntityList);
         }
 

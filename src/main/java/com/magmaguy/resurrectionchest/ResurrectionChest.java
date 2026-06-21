@@ -50,7 +50,7 @@ public class ResurrectionChest extends JavaPlugin {
             java.util.List.of("&7ResurrectionChest already works with vanilla chests. Custom chest props are optional and use FreeMinecraftModels."),
             java.util.List.of(
                     "&7The plugin already works with vanilla death chests.",
-                    "&7Nightbreak content is optional and adds custom chest props when FreeMinecraftModels is installed.",
+                    "&7Optional content adds custom chest props when FreeMinecraftModels is installed.",
                     "&eInstall FreeMinecraftModels if you want those custom chest props to display in-game."));
 
     public static Plugin plugin = null;
@@ -143,6 +143,7 @@ public class ResurrectionChest extends JavaPlugin {
 
         initializationContext.step("Commands");
         CommandManager commandManager = new CommandManager(this, "resurrectionchest");
+        commandManager.registerCommand(new ClearCommand());
         commandManager.registerCommand(new ReloadCommand());
         commandManager.registerCommand(new ResurrectionChestCommand());
         NightbreakPluginBootstrap.registerStandardCommands(this,
