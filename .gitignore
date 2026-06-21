@@ -6,3 +6,15 @@ docs/
 # Build/IDE artifacts - not tracked
 .gradle/
 output/
+
+# Local IDE/tooling and generated debris
+.claude/
+.vscode/
+*.iml
+.classpath
+.project
+.settings/
+target/
+out/
+codex-build.log
+dependency-reduced-pom.xml

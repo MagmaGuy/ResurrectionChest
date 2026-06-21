@@ -26,7 +26,7 @@ public class ResurrectionChestFirstTimeSetupMenu {
                 (JavaPlugin) MetadataHandler.PLUGIN,
                 player,
                 "&2ResurrectionChest",
-                "&6Nightbreak-powered content setup",
+                "&6Guided content setup",
                 createInfoItem(),
                 List.of(createRecommendedItem(), createManualItem(), createUseCurrentContentItem()));
     }
@@ -37,7 +37,7 @@ public class ResurrectionChestFirstTimeSetupMenu {
                 "&2Welcome to ResurrectionChest!",
                 List.of(
                         "&7The plugin works with vanilla death chests by default.",
-                        "&7Nightbreak + FreeMinecraftModels can add optional custom chest props."))) {
+                        "&7FreeMinecraftModels can add optional custom chest props."))) {
             @Override
             public void onClick(Player player) {
                 player.closeInventory();
@@ -62,7 +62,7 @@ public class ResurrectionChestFirstTimeSetupMenu {
                 "&2Recommended Setup",
                 List.of(
                         "&aMarks setup complete.",
-                        "&aGuides you to Nightbreak login and ResurrectionChest content install."))) {
+                        "&aGuides you to setup and recommended plugins."))) {
             @Override
             public void onClick(Player player) {
                 player.closeInventory();
@@ -83,7 +83,7 @@ public class ResurrectionChestFirstTimeSetupMenu {
                 DefaultConfig.toggleSetupDone(true);
                 Logger.sendSimpleMessage(player, "&8&m-----------------------------------------------------");
                 Logger.sendSimpleMessage(player, "&6Setup complete. ResurrectionChest will keep working with your current configuration.");
-                Logger.sendSimpleMessage(player, "&7Use &a/resurrectionchest setup &7whenever you want to manage Nightbreak content.");
+                Logger.sendSimpleMessage(player, "&7Use &a/resurrectionchest setup &7whenever you want to manage optional content.");
                 Logger.sendSimpleMessage(player, "&8&m-----------------------------------------------------");
             }
         };
@@ -104,7 +104,7 @@ public class ResurrectionChestFirstTimeSetupMenu {
                     Logger.sendSimpleMessage(player, "&7Use &a/resurrectionchest setup &7if you want to change or update it later.");
                 } else {
                     Logger.sendSimpleMessage(player, "&aSetup complete. ResurrectionChest will continue using vanilla death chests.");
-                    Logger.sendSimpleMessage(player, "&7Use &a/resurrectionchest setup &7when you're ready to install optional Nightbreak content.");
+                    Logger.sendSimpleMessage(player, "&7Use &a/resurrectionchest setup &7when you're ready to install optional content.");
                 }
                 Logger.sendSimpleMessage(player, "&8&m-----------------------------------------------------");
             }
