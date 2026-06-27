@@ -12,7 +12,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.configuration.file.FileConfiguration;
 
 import java.io.File;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -38,10 +37,9 @@ public class PlayerDataConfig extends ConfigurationFile {
     }
 
     public static void addPlayerdata(UUID uuid, Location location, String chestModel) {
-        Map<String, Object> playerData = new HashMap<>();
-        playerData.put("location", LocationParser.serializeLocation(location));
-        playerData.put("chestModel", chestModel);
-        instance.fileConfiguration.set(uuid.toString(), playerData);
+        String playerPath = uuid.toString();
+        instance.fileConfiguration.set(playerPath + ".location", LocationParser.serializeLocation(location));
+        instance.fileConfiguration.set(playerPath + ".chestModel", chestModel);
         ConfigurationEngine.fileSaverCustomValues(instance.fileConfiguration, instance.file);
     }
 
