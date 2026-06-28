@@ -292,32 +292,32 @@ public class ResurrectionChestObject implements PersistentObject {
     }
 
     /**
-     * The model isn't manually removed on chunk unload because it is not persistent
+     * The model should not survive ResurrectionChest lifecycle changes. It is
+     * recreated from playerData/chest state when the chunk loads again.
      */
     private void spawnCustomModel() {
         if (!CustomModel.FMMIsEnabled()) return;
-        if (customModel != null) customModel.remove();
-        customModel = null;
+        removeCustomModel();
         if (modelName.equals("none")) return;
         String finalModelName = modelName + (isDoubleChest() ? "_double" : "_single");
         customModel = CustomModel.CreateChestProp(centerLocation, uuid, this, finalModelName);
     }
 
+    private void removeCustomModel() {
+        if (customModel == null) return;
+        customModel.remove();
+        customModel = null;
+    }
+
     public void refreshCustomModel() {
         if (!locationWorldAndChunkAreLoaded()) {
-            if (customModel != null) {
-                customModel.remove();
-                customModel = null;
-            }
+            removeCustomModel();
             isLoaded = false;
             return;
         }
 
         loadChestState();
-        if (customModel != null) {
-            customModel.remove();
-            customModel = null;
-        }
+        removeCustomModel();
         spawnCustomModel();
     }
 
@@ -378,7 +378,7 @@ public class ResurrectionChestObject implements PersistentObject {
         removeAttachedSigns();
 
         resurrectionChests.remove(uuid);
-        if (customModel != null) customModel.remove();
+        removeCustomModel();
         Player player = Bukkit.getPlayer(uuid);
         if (player != null) Logger.sendMessage(player, DefaultConfig.deathChestRemovedMessage);
     }
@@ -425,7 +425,7 @@ public class ResurrectionChestObject implements PersistentObject {
 
         PlayerDataConfig.removePlayerData(uuid);
         if (persistentObjectHandler != null) persistentObjectHandler.remove();
-        if (customModel != null) customModel.remove();
+        removeCustomModel();
         resurrectionChests.remove(uuid);
         return removedBlocks;
     }
@@ -462,7 +462,7 @@ public class ResurrectionChestObject implements PersistentObject {
     @Override
     public void chunkUnload() {
         isLoaded = false;
-        customModel = null;
+        removeCustomModel();
     }
 
     @Override

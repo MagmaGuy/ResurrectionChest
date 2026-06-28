@@ -10,7 +10,7 @@ compileJava.options.encoding = "UTF-8"
 compileTestJava.options.encoding = "UTF-8"
 
 group = "com.magmaguy"
-version = "2.2.3"
+version = "2.2.4"
 description = "ResurrectionChest"
 
 repositories {
