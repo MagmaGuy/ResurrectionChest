@@ -34,6 +34,11 @@ public class DeathChestRemover implements Listener {
 
         ResurrectionChestObject resurrectionChest = ResurrectionChestObject.getResurrectionChest(event.getBlock().getLocation());
         if (resurrectionChest == null) return;
+        // The creation event reaches this handler too, right after DeathChestConstructor
+        // registers the chest. The sign only carries the tracking tag from the tick after
+        // creation, so an untagged sign means this is the creation event - cancelling it
+        // would discard the text DeathChestConstructor just set.
+        if (!resurrectionChest.isTrackedSign(event.getBlock())) return;
         event.setCancelled(true);
     }
 }

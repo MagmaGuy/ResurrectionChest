@@ -103,6 +103,7 @@ class DeathChestConstructorAndRemoverTest {
         Block signBlock = chestLocation.getBlock().getRelative(BlockFace.NORTH);
         SignChangeEvent createEvent = new SignChangeEvent(signBlock, player, new String[]{"[ResChest]", "", "", ""});
         new DeathChestConstructor().onSignPlace(createEvent);
+        server.getScheduler().performOneTick();
         PlayerDataConfig.addPlayerdata(player.getUniqueId(), chestLocation, "none");
         assertNotNull(PlayerDataConfig.getInstance().getFileConfiguration().getString(player.getUniqueId() + ".location"));
         assertEquals(ChatColor.translateAlternateColorCodes('&', "&aCreated."), player.nextMessage());
@@ -125,11 +126,30 @@ class DeathChestConstructorAndRemoverTest {
         Block signBlock = chestLocation.getBlock().getRelative(BlockFace.NORTH);
         SignChangeEvent createEvent = new SignChangeEvent(signBlock, player, new String[]{"[ResChest]", "", "", ""});
         new DeathChestConstructor().onSignPlace(createEvent);
+        server.getScheduler().performOneTick();
         SignChangeEvent editEvent = new SignChangeEvent(signBlock, player, new String[]{"oops", "", "", ""});
 
         new DeathChestRemover().onEditSign(editEvent);
 
         assertTrue(editEvent.isCancelled());
+        assertNotNull(ResurrectionChestObject.getResurrectionChest(player));
+    }
+
+    @Test
+    void creationEventIsNotCancelledWhenBothHandlersReceiveIt() {
+        World world = server.addSimpleWorld("creation_dispatch_world");
+        world.loadChunk(0, 0);
+        PlayerMock player = playerWithUsePermission();
+        Location chestLocation = placeChestWithNorthSign(world);
+        Block signBlock = chestLocation.getBlock().getRelative(BlockFace.NORTH);
+        SignChangeEvent event = new SignChangeEvent(signBlock, player, new String[]{"[ResChest]", "", "", ""});
+
+        // Bukkit dispatches the same event instance to both listeners, constructor first.
+        new DeathChestConstructor().onSignPlace(event);
+        new DeathChestRemover().onEditSign(event);
+
+        assertFalse(event.isCancelled());
+        assertEquals(ChatColor.translateAlternateColorCodes('&', "&5[ResChest]"), event.getLine(1));
         assertNotNull(ResurrectionChestObject.getResurrectionChest(player));
     }
 
