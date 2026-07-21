@@ -54,7 +54,10 @@ public class ResurrectionChestObject implements PersistentObject {
         setIsDoubleChest();
         calculateCenterLocation();
         spawnCustomModel();
-        markTrackedBlocks();
+        // Block marking is deferred to the tick after the SignChangeEvent (see
+        // DeathChestConstructor): force-updating the sign's tile state mid-event
+        // would discard the text the event is about to apply, and the missing tag
+        // is how DeathChestRemover tells the creation event apart from later edits.
         PlayerDataConfig.addPlayerdata(uuid, location, modelName);
         worldName = location.getWorld().getName();
         persistentObjectHandler = new PersistentObjectHandler(this);
@@ -220,6 +223,10 @@ public class ResurrectionChestObject implements PersistentObject {
         tileState.getPersistentDataContainer().set(ownerKey(), org.bukkit.persistence.PersistentDataType.STRING, uuid.toString());
         tileState.getPersistentDataContainer().set(blockTypeKey(), org.bukkit.persistence.PersistentDataType.STRING, type);
         tileState.update(true, false);
+    }
+
+    public boolean isTrackedSign(Block block) {
+        return isTrackedBlock(block, "sign");
     }
 
     private boolean isTrackedBlock(Block block, String type) {
