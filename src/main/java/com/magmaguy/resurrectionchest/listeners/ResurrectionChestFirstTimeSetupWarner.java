@@ -35,7 +35,7 @@ public class ResurrectionChestFirstTimeSetupWarner implements Listener {
                                 "&7Browse and install premade ResurrectionChest content.",
                                 "/resurrectionchest setup"),
                         SpigotMessage.simpleMessage("&7 opens premade content and permanently dismisses this message."));
-                Logger.sendSimpleMessage(event.getPlayer(), "&7To make a resurrection chest, place a chest and put a sign that says &a[deathchest]&7 on it.");
+                Logger.sendSimpleMessage(event.getPlayer(), "&7To make a resurrection chest, place a chest and put a sign that says &a" + DefaultConfig.resurrectionChestSignName + "&7 on it.");
                 Logger.sendSimpleMessage(event.getPlayer(), "&8&m----------------------------------------------------");
             }
         }.runTaskLater(ownerPlugin, 20L * 10);

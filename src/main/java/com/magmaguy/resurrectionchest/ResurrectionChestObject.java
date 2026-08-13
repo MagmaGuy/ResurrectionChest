@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.UUID;
 
 public class ResurrectionChestObject implements PersistentObject {
+    private static final BlockFace[] CARDINAL_FACES = {BlockFace.NORTH, BlockFace.SOUTH, BlockFace.EAST, BlockFace.WEST};
     @Getter
     private static final HashMap<UUID, ResurrectionChestObject> resurrectionChests = new HashMap<>();
     private static BukkitTask gameClock = null;
@@ -41,14 +42,16 @@ public class ResurrectionChestObject implements PersistentObject {
     @Getter
     private boolean doubleChest = false;
     private List<Location> allChests = null;
+    private List<Location> knownChestLocations = new ArrayList<>();
     private List<Location> allBlocks = null;
     private List<Location> allSigns = null;
-    private boolean chestHasChanged = false;
-    @Getter
+    private boolean initialTrackingPending = false;
+    private boolean legacyTrackingMigrationPending = false;
     private String modelName = "none";
     public ResurrectionChestObject(Player player, Location location) {
         this.uuid = player.getUniqueId();
         this.location = location;
+        this.initialTrackingPending = true;
         if (CustomModel.FMMIsEnabled()) this.modelName = determineModelName(player);
         resurrectionChests.put(uuid, this);
         setIsDoubleChest();
@@ -64,41 +67,40 @@ public class ResurrectionChestObject implements PersistentObject {
         isLoaded = true;
     }
 
-    public ResurrectionChestObject(UUID uuid, Location location, String modelName) {
-        this.uuid = uuid;
-        this.location = location;
-        this.modelName = modelName != null ? modelName : "none";
-        resurrectionChests.put(uuid, this);
-        setIsDoubleChest();
-        calculateCenterLocation();
-        spawnCustomModel();
-        markTrackedBlocks();
-        worldName = location.getWorld().getName();
-        persistentObjectHandler = new PersistentObjectHandler(this);
-        isLoaded = true;
-    }
-
-    public ResurrectionChestObject(UUID uuid, String locationString, String modelName) {
+    public ResurrectionChestObject(UUID uuid,
+                                   String locationString,
+                                   String modelName,
+                                   int trackedBlockSchemaVersion) {
         this.uuid = uuid;
         if (modelName != null) this.modelName = modelName;
+        this.legacyTrackingMigrationPending =
+                trackedBlockSchemaVersion < PlayerDataConfig.TRACKED_BLOCK_SCHEMA_VERSION;
 
         Location parsedLocation = LocationParser.parseLocation(locationString);
         this.location = parsedLocation;
         worldName = parsedLocation.getWorld() != null ? parsedLocation.getWorld().getName() : LocationParser.getWorldString(locationString);
         resurrectionChests.put(uuid, this);
+        boolean validLoadedRegistration = true;
         if (locationWorldAndChunkAreLoaded()) {
             loadChestState();
-            spawnCustomModel();
-            markTrackedBlocks();
-            isLoaded = true;
+            validLoadedRegistration = authorizeLoadedTrackedChest();
+            if (validLoadedRegistration) {
+                spawnCustomModel();
+                isLoaded = true;
+            }
         } else {
             isLoaded = false;
         }
         persistentObjectHandler = new PersistentObjectHandler(this);
+        if (!validLoadedRegistration) invalidateRegistration("stored chest ownership tags are missing or conflicting");
     }
 
     public static void startClock() {
-        if (gameClock != null) gameClock.cancel();
+        if (gameClock != null) {
+            gameClock.cancel();
+            gameClock = null;
+        }
+        if (!DefaultConfig.enableParticleEffects) return;
         gameClock = new BukkitRunnable() {
             @Override
             public void run() {
@@ -116,7 +118,7 @@ public class ResurrectionChestObject implements PersistentObject {
     }
 
     public static void refreshAllModels() {
-        for (ResurrectionChestObject resurrectionChestObject : resurrectionChests.values()) {
+        for (ResurrectionChestObject resurrectionChestObject : new ArrayList<>(resurrectionChests.values())) {
             resurrectionChestObject.refreshCustomModel();
         }
     }
@@ -127,25 +129,47 @@ public class ResurrectionChestObject implements PersistentObject {
         return resurrectionChests.get(player.getUniqueId());
     }
 
+    public boolean isCurrentRegistration() {
+        return resurrectionChests.get(uuid) == this;
+    }
+
+    public boolean isTrackingClaimPending() {
+        return initialTrackingPending && isCurrentRegistration();
+    }
+
     public static ResurrectionChestObject getResurrectionChest(Location location) {
+        if (location == null || location.getWorld() == null) return null;
         for (ResurrectionChestObject resurrectionChestObject : resurrectionChests.values()) {
             if (!resurrectionChestObject.isLoaded) continue;
             for (Location blockLocation : resurrectionChestObject.getAllBlocks()) {
-                if (location.getBlockX() == blockLocation.getBlockX() &&
-                        location.getBlockY() == blockLocation.getBlockY() &&
-                        location.getBlockZ() == blockLocation.getBlockZ())
+                if (sameBlock(location, blockLocation))
                     return resurrectionChestObject;
             }
         }
         return null;
     }
 
+    private static boolean sameBlock(Location first, Location second) {
+        if (first == null || second == null ||
+                first.getWorld() == null || second.getWorld() == null)
+            return false;
+        return first.getWorld().getUID().equals(second.getWorld().getUID()) &&
+                first.getBlockX() == second.getBlockX() &&
+                first.getBlockY() == second.getBlockY() &&
+                first.getBlockZ() == second.getBlockZ();
+    }
+
     public static void initializeConfigDeathchests() {
-        for (String uuidString : PlayerDataConfig.getInstance().getFileConfiguration().getKeys(false)) {
+        for (String uuidString : new ArrayList<>(
+                PlayerDataConfig.getInstance().getFileConfiguration().getKeys(false))) {
             try {
                 UUID uuid = UUID.fromString(uuidString);
                 PlayerDataConfig.RawPlayerData rawData = PlayerDataConfig.getRawPlayerData(uuid);
-                new ResurrectionChestObject(uuid, rawData.locationString(), rawData.chestModel());
+                new ResurrectionChestObject(
+                        uuid,
+                        rawData.locationString(),
+                        rawData.chestModel(),
+                        rawData.trackedBlockSchemaVersion());
             } catch (Exception e) {
                 Logger.warn("Failed to load resurrection chest for player " + uuidString + ": " + e.getMessage());
             }
@@ -205,35 +229,128 @@ public class ResurrectionChestObject implements PersistentObject {
         clearCachedBlocks();
         setIsDoubleChest();
         calculateCenterLocation();
-        chestHasChanged = false;
     }
 
-    public void markTrackedBlocks() {
-        if (!locationWorldAndChunkAreLoaded()) return;
-        for (Location chestLocation : getAllChests()) {
-            markTrackedBlock(chestLocation.getBlock(), "chest");
+    public boolean markTrackedBlocks() {
+        if (!isCurrentRegistration() || !locationWorldAndChunkAreLoaded()) return false;
+
+        List<Block> chestBlocks = getAllChests().stream()
+                .map(Location::getBlock)
+                .toList();
+        List<Block> signBlocks = getAllSigns().stream()
+                .map(Location::getBlock)
+                .toList();
+        if (chestBlocks.isEmpty() || chestBlocks.stream().anyMatch(block ->
+                block.getType() != Material.CHEST ||
+                        trackingState(block, "chest") == TrackingState.CONFLICT))
+            return false;
+        if (signBlocks.stream().anyMatch(block ->
+                !block.getType().toString().endsWith("_SIGN") ||
+                        trackingState(block, "sign") == TrackingState.CONFLICT))
+            return false;
+
+        for (Block block : chestBlocks) {
+            if (!markTrackedBlock(block, "chest")) return false;
         }
-        for (Location signLocation : getAllSigns()) {
-            markTrackedBlock(signLocation.getBlock(), "sign");
+        for (Block block : signBlocks) {
+            if (!markTrackedBlock(block, "sign")) return false;
         }
+        initialTrackingPending = false;
+        legacyTrackingMigrationPending = false;
+        PlayerDataConfig.markTrackedBlockSchemaCurrent(uuid);
+        return true;
     }
 
-    private void markTrackedBlock(Block block, String type) {
-        if (!(block.getState() instanceof TileState tileState)) return;
+    private boolean markTrackedBlock(Block block, String type) {
+        if (!(block.getState() instanceof TileState tileState)) return false;
         tileState.getPersistentDataContainer().set(ownerKey(), org.bukkit.persistence.PersistentDataType.STRING, uuid.toString());
         tileState.getPersistentDataContainer().set(blockTypeKey(), org.bukkit.persistence.PersistentDataType.STRING, type);
-        tileState.update(true, false);
+        return tileState.update(true, false);
     }
 
     public boolean isTrackedSign(Block block) {
-        return isTrackedBlock(block, "sign");
+        if (initialTrackingPending) return false;
+        return mayTrustTrackedLocation(block, "sign");
     }
 
-    private boolean isTrackedBlock(Block block, String type) {
-        if (!(block.getState() instanceof TileState tileState)) return false;
-        String owner = tileState.getPersistentDataContainer().get(ownerKey(), org.bukkit.persistence.PersistentDataType.STRING);
-        String blockType = tileState.getPersistentDataContainer().get(blockTypeKey(), org.bukkit.persistence.PersistentDataType.STRING);
-        return uuid.toString().equals(owner) && type.equals(blockType);
+    /**
+     * Returns whether this block is still a chest owned by this registration.
+     * Strict mode requires the owner/type PDC written when the chest was
+     * registered. The existing high-compatibility mode deliberately falls back
+     * to location/material trust for servers whose block metadata is stripped.
+     */
+    public boolean isTrackedChest(Block block) {
+        return block != null && block.getType() == Material.CHEST &&
+                mayTrustTrackedLocation(block, "chest");
+    }
+
+    /**
+     * Validates every half of the inventory that would receive a player's
+     * items. This prevents a chest destroyed or replaced outside Bukkit's
+     * normal break event from inheriting the old registration.
+     */
+    public boolean hasUsableTrackedChest() {
+        if (resurrectionChests.get(uuid) != this ||
+                !locationWorldAndChunkAreLoaded())
+            return false;
+
+        Block primaryBlock = location.getBlock();
+        if (!isTrackedChest(primaryBlock) || !(primaryBlock.getState() instanceof Chest chest))
+            return false;
+
+        if (!(chest.getInventory() instanceof DoubleChestInventory doubleChestInventory))
+            return true;
+
+        return isTrackedChest(doubleChestInventory.getLeftSide().getLocation().getBlock()) &&
+                isTrackedChest(doubleChestInventory.getRightSide().getLocation().getBlock());
+    }
+
+    private boolean mayTrustTrackedLocation(Block block, String type) {
+        TrackingState state = trackingState(block, type);
+        if (state == TrackingState.MATCH) return true;
+        if (state == TrackingState.CONFLICT) return false;
+        return DefaultConfig.enableHighCompatibility;
+    }
+
+    private TrackingState trackingState(Block block, String type) {
+        if (block == null || !(block.getState() instanceof TileState tileState))
+            return TrackingState.ABSENT;
+        String owner = tileState.getPersistentDataContainer().get(
+                ownerKey(), org.bukkit.persistence.PersistentDataType.STRING);
+        String blockType = tileState.getPersistentDataContainer().get(
+                blockTypeKey(), org.bukkit.persistence.PersistentDataType.STRING);
+        if (owner == null && blockType == null) return TrackingState.ABSENT;
+        if (uuid.toString().equals(owner) && type.equals(blockType)) return TrackingState.MATCH;
+        return TrackingState.CONFLICT;
+    }
+
+    public static boolean hasTrackedChestConflict(Block block, UUID prospectiveOwner) {
+        if (block == null || !(block.getState() instanceof TileState tileState)) return false;
+        String owner = tileState.getPersistentDataContainer().get(
+                ownerKey(), org.bukkit.persistence.PersistentDataType.STRING);
+        String blockType = tileState.getPersistentDataContainer().get(
+                blockTypeKey(), org.bukkit.persistence.PersistentDataType.STRING);
+        if (owner == null && blockType == null) return false;
+        return !prospectiveOwner.toString().equals(owner) || !"chest".equals(blockType);
+    }
+
+    private boolean authorizeLoadedTrackedChest() {
+        if (initialTrackingPending) return true;
+        if (legacyTrackingMigrationPending) return markTrackedBlocks();
+        return hasUsableTrackedChest();
+    }
+
+    private void invalidateRegistration(String reason) {
+        isLoaded = false;
+        Logger.warn("Discarding ResurrectionChest registration for " + uuid + " at " +
+                LocationParser.serializeLocation(location) + ": " + reason + ".");
+        remove();
+    }
+
+    private enum TrackingState {
+        MATCH,
+        ABSENT,
+        CONFLICT
     }
 
     private static NamespacedKey ownerKey() {
@@ -250,18 +367,25 @@ public class ResurrectionChestObject implements PersistentObject {
         allSigns = null;
     }
 
-    public void setChestHasChanged(boolean chestHasChanged) {
-        this.chestHasChanged = chestHasChanged;
-        if (chestHasChanged) clearCachedBlocks();
+    public void markChestChanged() {
+        if (!isCurrentRegistration()) return;
+        clearCachedBlocks();
+        // Re-tag after clearing so a newly joined double-chest half (and its signs)
+        // gets the tracking tag; without this, strict mode skips the untagged half
+        // in clearTrackedBlocks/removeAttachedSigns. Idempotent and chunk-guarded.
+        if (!markTrackedBlocks()) {
+            invalidateRegistration("a joined chest or sign has conflicting ownership tags");
+            return;
+        }
         refreshCustomModel();
     }
 
     public List<Location> getAllSigns() {
-        if (allSigns != null && !chestHasChanged) return allSigns;
+        if (allSigns != null) return allSigns;
         List<Location> signs = new ArrayList<>();
         for (Location chestLocation : getAllChests()) {
             Block chestBlock = chestLocation.getBlock();
-            for (BlockFace face : BlockFace.values()) {
+            for (BlockFace face : CARDINAL_FACES) {
                 Block block = chestBlock.getRelative(face);
                 if (block.getType().toString().endsWith("WALL_SIGN")) {
                     BlockData blockData = block.getBlockData();
@@ -279,19 +403,29 @@ public class ResurrectionChestObject implements PersistentObject {
     }
 
     public List<Location> getAllChests() {
-        if (allChests != null && !chestHasChanged) return allChests;
-        if (!isDoubleChest()) {
-            return allChests = List.of(location);
-        }
+        if (allChests != null) return allChests;
         BlockState chestState = location.getBlock().getState();
         if (chestState instanceof Chest && ((Chest) chestState).getInventory() instanceof DoubleChestInventory doubleChestInventory) {
-            return allChests = List.of(doubleChestInventory.getLeftSide().getLocation(), doubleChestInventory.getRightSide().getLocation());
+            return rememberChestLocations(List.of(
+                    doubleChestInventory.getLeftSide().getLocation(),
+                    doubleChestInventory.getRightSide().getLocation()));
         }
+        if (chestState instanceof Chest)
+            return rememberChestLocations(List.of(location));
+        if (!knownChestLocations.isEmpty())
+            return allChests = new ArrayList<>(knownChestLocations);
         return allChests = List.of(location);
     }
 
+    private List<Location> rememberChestLocations(List<Location> chestLocations) {
+        knownChestLocations = chestLocations.stream()
+                .map(Location::clone)
+                .toList();
+        return allChests = chestLocations;
+    }
+
     public List<Location> getAllBlocks() {
-        if (allBlocks != null && !chestHasChanged) return allBlocks;
+        if (allBlocks != null) return allBlocks;
         List<Location> locations = new ArrayList<>();
         locations.addAll(getAllSigns());
         locations.addAll(getAllChests());
@@ -304,10 +438,9 @@ public class ResurrectionChestObject implements PersistentObject {
      */
     private void spawnCustomModel() {
         if (!CustomModel.FMMIsEnabled()) return;
-        removeCustomModel();
         if (modelName.equals("none")) return;
         String finalModelName = modelName + (isDoubleChest() ? "_double" : "_single");
-        customModel = CustomModel.CreateChestProp(centerLocation, uuid, this, finalModelName);
+        customModel = CustomModel.CreateChestProp(centerLocation, this, finalModelName);
     }
 
     private void removeCustomModel() {
@@ -324,56 +457,43 @@ public class ResurrectionChestObject implements PersistentObject {
         }
 
         loadChestState();
+        if (!authorizeLoadedTrackedChest()) {
+            invalidateRegistration("model refresh found missing or conflicting chest ownership tags");
+            return;
+        }
         removeCustomModel();
         spawnCustomModel();
     }
 
     private void tick() {
-        if (!DefaultConfig.enableParticleEffects) return;
         //prevent ticking if the chunk is not loaded
         if (!locationWorldAndChunkAreLoaded()) {
             isLoaded = false;
             return;
         }
-        if (!isLoaded || centerLocation == null) chunkLoad();
         if (!isLoaded) return;
         doParticleEffects();
     }
 
     private void doParticleEffects() {
         Location adjustedLocation = centerLocation.clone().add(0, 0.5, 0);
-        location.getWorld().spawnParticle(Particle.valueOf(DefaultConfig.particleEffect3), adjustedLocation, 1, 0.075, 0.075, 0.75, 0.8);
+        location.getWorld().spawnParticle(DefaultConfig.resolvedParticleEffect, adjustedLocation, 1, 0.075, 0.075, 0.75, 0.8);
     }
 
     /**
-     * Removes any signs attached to the chest block
+     * Removes tracked signs attached to every known half of the chest. Cached
+     * locations intentionally remain usable after a chest block disappears, so
+     * the missing-chest cleanup path cannot leave orphaned signs behind.
      */
     private void removeAttachedSigns() {
         if (location == null || location.getWorld() == null) return;
-        markTrackedBlocks();
 
-        Block chestBlock = location.getBlock();
-        if (chestBlock.getType() != Material.CHEST) return;
-
-        // Check all 4 sides of the chest for attached wall signs
-        BlockFace[] faces = {BlockFace.NORTH, BlockFace.SOUTH, BlockFace.EAST, BlockFace.WEST};
-
-        for (BlockFace face : faces) {
-            Block adjacentBlock = chestBlock.getRelative(face);
-
-            // Check if it's a wall sign
-            if (adjacentBlock.getType().toString().endsWith("_WALL_SIGN")) {
-
-                // Check if the sign is actually attached to our chest
-                if (adjacentBlock.getBlockData() instanceof WallSign wallSign) {
-                    Block attachedBlock = adjacentBlock.getRelative(wallSign.getFacing().getOppositeFace());
-
-                    // If the sign is attached to our chest block, remove it
-                    if (attachedBlock.equals(chestBlock) && isTrackedBlock(adjacentBlock, "sign")) {
-                        adjacentBlock.setType(Material.AIR);
-                    }
-                }
-            }
+        clearCachedBlocks();
+        for (Location signLoc : getAllSigns()) {
+            Block signBlock = signLoc.getBlock();
+            if (!(signBlock.getBlockData() instanceof WallSign)) continue;
+            if (!mayTrustTrackedLocation(signBlock, "sign")) continue;
+            signBlock.setType(Material.AIR);
         }
     }
 
@@ -387,7 +507,8 @@ public class ResurrectionChestObject implements PersistentObject {
         resurrectionChests.remove(uuid);
         removeCustomModel();
         Player player = Bukkit.getPlayer(uuid);
-        if (player != null) Logger.sendMessage(player, DefaultConfig.deathChestRemovedMessage);
+        if (player != null)
+            player.sendMessage(ChatColor.translateAlternateColorCodes('&', DefaultConfig.deathChestRemovedMessage));
     }
 
     public static int clearAllTrackedBlocks() {
@@ -403,16 +524,17 @@ public class ResurrectionChestObject implements PersistentObject {
             PlayerDataConfig.removePlayerData(uuid);
             resurrectionChests.remove(uuid);
             if (persistentObjectHandler != null) persistentObjectHandler.remove();
+            removeCustomModel();
             return 0;
         }
 
         location.getWorld().getChunkAt(location);
-        markTrackedBlocks();
 
         int removedBlocks = 0;
         for (Location signLocation : new ArrayList<>(getAllSigns())) {
             Block signBlock = signLocation.getBlock();
-            if (isTrackedBlock(signBlock, "sign")) {
+            if (!signBlock.getType().toString().endsWith("_SIGN")) continue;
+            if (mayTrustTrackedLocation(signBlock, "sign")) {
                 signBlock.setType(Material.AIR);
                 removedBlocks++;
             }
@@ -421,7 +543,8 @@ public class ResurrectionChestObject implements PersistentObject {
         boolean inventoryDropped = false;
         for (Location chestLocation : new ArrayList<>(getAllChests())) {
             Block chestBlock = chestLocation.getBlock();
-            if (!isTrackedBlock(chestBlock, "chest")) continue;
+            if (chestBlock.getType() != Material.CHEST) continue;
+            if (!mayTrustTrackedLocation(chestBlock, "chest")) continue;
             if (!inventoryDropped) {
                 dropChestInventory(chestBlock);
                 inventoryDropped = true;
@@ -454,12 +577,19 @@ public class ResurrectionChestObject implements PersistentObject {
             return;
         }
         if (isLoaded && customModel != null) {
+            if (!authorizeLoadedTrackedChest()) {
+                invalidateRegistration("loaded chest ownership tags are missing or conflicting");
+                return;
+            }
             customModel.refreshPropBlocks();
             return;
         }
         loadChestState();
+        if (!authorizeLoadedTrackedChest()) {
+            invalidateRegistration("loaded chest ownership tags are missing or conflicting");
+            return;
+        }
         spawnCustomModel();
-        markTrackedBlocks();
         if (customModel != null) customModel.refreshPropBlocks();
         isLoaded = true;
     }

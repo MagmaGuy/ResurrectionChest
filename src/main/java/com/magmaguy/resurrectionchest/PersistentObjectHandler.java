@@ -1,8 +1,5 @@
 package com.magmaguy.resurrectionchest;
 
-import com.google.common.collect.ArrayListMultimap;
-import com.magmaguy.resurrectionchest.utils.ChunkVectorizer;
-import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.Location;
@@ -10,148 +7,197 @@ import org.bukkit.World;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.world.*;
+import org.bukkit.event.world.ChunkLoadEvent;
+import org.bukkit.event.world.ChunkUnloadEvent;
+import org.bukkit.event.world.WorldLoadEvent;
+import org.bukkit.event.world.WorldUnloadEvent;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Objects;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 
 public class PersistentObjectHandler {
-    /*
-This ArrayListMultiMap keeps two types of string keys: The first type is a world name and the second type is a chunk vector converted to a string
- */
-    private static final ArrayListMultimap<String, PersistentObjectHandler> persistentObjects = ArrayListMultimap.create();
+    private static final Map<String, Set<PersistentObjectHandler>> WORLD_OBJECTS = new HashMap<>();
+    private static final Map<ChunkKey, Set<PersistentObjectHandler>> CHUNK_OBJECTS = new HashMap<>();
+
     private final PersistentObject persistentObject;
     private final String worldName;
-    @Getter
     private Location persistentLocation;
-    private String chunk;
+    private ChunkKey chunkKey;
+    private boolean registeredByWorld;
+    private boolean removed;
 
     /**
-     * Used to store the locations of custom bosses that have gone into unloaded chunks.
+     * Tracks a persistent object (a resurrection chest) so it can be reloaded
+     * when its chunk or world loads again.
      *
-     * @param persistentObject
+     * @param persistentObject Persistent object to track
      */
     public PersistentObjectHandler(PersistentObject persistentObject) {
         this.persistentObject = persistentObject;
         this.persistentLocation = persistentObject.getPersistentLocation();
         this.worldName = persistentObject.getWorldName();
-        if (persistentLocation != null &&
-                persistentLocation.getWorld() != null &&
-                Bukkit.getWorld(persistentLocation.getWorld().getUID()) != null)
-            addChunkKey(this);
-        else
-            addWorldKey(this);
+        registerForCurrentState();
     }
 
     /**
-     * Clears all data for a correct shutdown
+     * Clears all data for a correct shutdown.
      */
     public static void shutdown() {
-        persistentObjects.clear();
+        WORLD_OBJECTS.clear();
+        CHUNK_OBJECTS.clear();
     }
 
-    /**
-     * Used to add persistent entities to the list. This inserts an arbitrary amount of persistent entities into a chunk.
-     * Called when a SimplePersistentEntity is created.
-     *
-     * @param simplePersistentEntity Entity to be added
-     */
-    private void addChunkKey(PersistentObjectHandler simplePersistentEntity) {
-        if (persistentLocation.getWorld() == null) return;
-        this.chunk = ChunkVectorizer.hash(persistentLocation.getBlockX() >> 4, persistentLocation.getBlockZ() >> 4, persistentLocation.getWorld().getUID()) + "";
-        persistentObjects.put(simplePersistentEntity.chunk, simplePersistentEntity);
+    private void registerForCurrentState() {
+        if (removed) return;
+        if (persistentLocation != null && persistentLocation.getWorld() != null &&
+                Bukkit.getWorld(persistentLocation.getWorld().getUID()) != null) {
+            registerByChunk();
+        } else {
+            registerByWorld();
+        }
     }
 
-    private void addWorldKey(PersistentObjectHandler persistentObjectHandler) {
-        persistentObjects.put(persistentObjectHandler.worldName, persistentObjectHandler);
+    private void registerByChunk() {
+        if (removed) return;
+        if (persistentLocation == null || persistentLocation.getWorld() == null) {
+            registerByWorld();
+            return;
+        }
+        chunkKey = ChunkKey.from(persistentLocation);
+        CHUNK_OBJECTS.computeIfAbsent(chunkKey, ignored -> new HashSet<>()).add(this);
+        registeredByWorld = false;
+    }
+
+    private void registerByWorld() {
+        if (removed) return;
+        chunkKey = null;
+        WORLD_OBJECTS.computeIfAbsent(worldName, ignored -> new HashSet<>()).add(this);
+        registeredByWorld = true;
+    }
+
+    private void unregister() {
+        if (chunkKey != null) {
+            removeFromBucket(CHUNK_OBJECTS, chunkKey, this);
+            chunkKey = null;
+        }
+        if (registeredByWorld) {
+            removeFromBucket(WORLD_OBJECTS, worldName, this);
+            registeredByWorld = false;
+        }
+    }
+
+    private static <K> void removeFromBucket(Map<K, Set<PersistentObjectHandler>> index, K key,
+                                             PersistentObjectHandler handler) {
+        Set<PersistentObjectHandler> bucket = index.get(key);
+        if (bucket == null) return;
+        bucket.remove(handler);
+        if (bucket.isEmpty()) index.remove(key);
     }
 
     public void worldLoad(World world) {
-        //convert persistent object handler to chunk-based detection
-        //Start by removing old key
-        remove();
-        //Assign world to the location
-        this.persistentLocation.setWorld(world);
-        //run implementations
-        persistentObject.worldLoad(world);
-        //Assign key
-        addChunkKey(this);
-
+        if (removed) return;
+        unregister();
+        try {
+            persistentObject.worldLoad(world);
+        } finally {
+            persistentLocation = persistentObject.getPersistentLocation();
+            registerForCurrentState();
+        }
     }
 
     public void worldUnload() {
-        //run implementations
-        persistentObject.worldUnload();
-        //convert persistent object handler to world-based detection
-        //Start by removing old key
-        remove();
-        //Assign key
-        addWorldKey(this);
+        if (removed) return;
+        unregister();
+        try {
+            persistentObject.worldUnload();
+        } finally {
+            persistentLocation = persistentObject.getPersistentLocation();
+            registerByWorld();
+        }
     }
 
     public void updatePersistentLocation(Location location) {
-        remove();
-        this.persistentLocation = location;
-        addChunkKey(this);
+        if (removed) return;
+        unregister();
+        persistentLocation = location;
+        registerForCurrentState();
     }
 
     public void remove() {
-        persistentObjects.remove(this.chunk, this);
-        persistentObjects.remove(this.worldName, this);
+        removed = true;
+        unregister();
+    }
+
+    private void loadIfActive() {
+        if (removed) return;
+        persistentObject.chunkLoad();
+    }
+
+    private record ChunkKey(UUID worldId, int x, int z) {
+        private static ChunkKey from(Chunk chunk) {
+            return new ChunkKey(chunk.getWorld().getUID(), chunk.getX(), chunk.getZ());
+        }
+
+        private static ChunkKey from(Location location) {
+            return new ChunkKey(location.getWorld().getUID(), location.getBlockX() >> 4, location.getBlockZ() >> 4);
+        }
     }
 
     public static class PersistentObjectHandlerEvents implements Listener {
-
-        private static int chunkLocation(Chunk chunk) {
-            return ChunkVectorizer.hash(chunk);
+        private static List<PersistentObjectHandler> chunkHandlers(Chunk chunk) {
+            Set<PersistentObjectHandler> handlers = CHUNK_OBJECTS.get(ChunkKey.from(chunk));
+            return handlers == null ? List.of() : new ArrayList<>(handlers);
         }
 
-
-        /**
-         * Behavior that runs when a chunk loads, spawning the entity
-         */
         private static void loadChunk(List<PersistentObjectHandler> persistentObjectHandlers) {
-            for (PersistentObjectHandler persistentObjectHandler : persistentObjectHandlers) {
-                persistentObjectHandler.persistentObject.chunkLoad();
-            }
+            for (PersistentObjectHandler persistentObjectHandler : persistentObjectHandlers)
+                persistentObjectHandler.loadIfActive();
         }
 
         private static void unloadChunk(List<PersistentObjectHandler> persistentObjectHandlers) {
-            for (PersistentObjectHandler persistentObjectHandler : persistentObjectHandlers) {
+            for (PersistentObjectHandler persistentObjectHandler : persistentObjectHandlers)
                 persistentObjectHandler.persistentObject.chunkUnload();
-            }
         }
 
         private static void unloadWorld(World world) {
-            List<PersistentObjectHandler> copy = new ArrayList<>();
-            for (PersistentObjectHandler persistentObjectHandler : persistentObjects.values())
-                if (Objects.equals(persistentObjectHandler.worldName, world.getName()))
-                    copy.add(persistentObjectHandler);
-            for (PersistentObjectHandler persistentObjectHandler : copy) {
-                persistentObjectHandler.worldUnload();
+            Set<PersistentObjectHandler> handlers = new HashSet<>();
+            for (Map.Entry<ChunkKey, Set<PersistentObjectHandler>> entry : CHUNK_OBJECTS.entrySet()) {
+                if (entry.getKey().worldId().equals(world.getUID())) handlers.addAll(entry.getValue());
             }
+            for (PersistentObjectHandler persistentObjectHandler : new ArrayList<>(handlers))
+                persistentObjectHandler.worldUnload();
         }
 
         private static void loadWorld(World world) {
-            List<PersistentObjectHandler> copy = new ArrayList<>(persistentObjects.get(world.getName()));
-            for (PersistentObjectHandler persistentObjectHandler : copy) {
+            Set<PersistentObjectHandler> handlers = WORLD_OBJECTS.get(world.getName());
+            if (handlers == null) return;
+            for (PersistentObjectHandler persistentObjectHandler : new ArrayList<>(handlers))
                 persistentObjectHandler.worldLoad(world);
-            }
         }
 
-        //Store world names and serialized locations
         @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
         public void chunkLoadEvent(ChunkLoadEvent event) {
-            int chunkLocation = chunkLocation(event.getChunk());
-            List<PersistentObjectHandler> simplePersistentEntityList = new ArrayList<>(persistentObjects.get(chunkLocation + ""));
-            if (simplePersistentEntityList.isEmpty()) return;
-            Bukkit.getScheduler().scheduleSyncDelayedTask(MetadataHandler.PLUGIN, () -> loadChunk(simplePersistentEntityList), 1L);
+            List<PersistentObjectHandler> handlers = chunkHandlers(event.getChunk());
+            if (handlers.isEmpty()) return;
+            Bukkit.getScheduler().scheduleSyncDelayedTask(MetadataHandler.PLUGIN, () -> loadChunk(handlers), 1L);
         }
 
-        @EventHandler(ignoreCancelled = true, priority = EventPriority.LOW)
+        @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
         public void worldUnloadEvent(WorldUnloadEvent event) {
-            unloadWorld(event.getWorld());
+            World unloadingWorld = event.getWorld();
+            UUID worldId = unloadingWorld.getUID();
+            // A MONITOR listener can still be followed by another MONITOR
+            // registration that cancels the event. Observe the actual Bukkit
+            // state next tick before moving every object to the world index.
+            Bukkit.getScheduler().runTask(MetadataHandler.PLUGIN, () -> {
+                if (Bukkit.getWorld(worldId) != null) return;
+                unloadWorld(unloadingWorld);
+            });
         }
 
         @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
@@ -159,13 +205,22 @@ This ArrayListMultiMap keeps two types of string keys: The first type is a world
             loadWorld(event.getWorld());
         }
 
-        @EventHandler (priority = EventPriority.HIGHEST, ignoreCancelled = true)
+        @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
         public void chunkUnloadEvent(ChunkUnloadEvent event) {
-            int chunkLocation = chunkLocation(event.getChunk());
-            List<PersistentObjectHandler> simplePersistentEntityList = new ArrayList<>(persistentObjects.get(chunkLocation + ""));
-            if (simplePersistentEntityList.isEmpty()) return;
-            unloadChunk(simplePersistentEntityList);
+            UUID worldId = event.getWorld().getUID();
+            int chunkX = event.getChunk().getX();
+            int chunkZ = event.getChunk().getZ();
+            Bukkit.getScheduler().runTask(MetadataHandler.PLUGIN, () -> {
+                World liveWorld = Bukkit.getWorld(worldId);
+                // A world unload owns the broader transition. If the world is
+                // still live, only unload objects after this chunk really left.
+                if (liveWorld == null || liveWorld.isChunkLoaded(chunkX, chunkZ)) return;
+                Set<PersistentObjectHandler> indexed =
+                        CHUNK_OBJECTS.get(new ChunkKey(worldId, chunkX, chunkZ));
+                if (indexed != null && !indexed.isEmpty()) {
+                    unloadChunk(new ArrayList<>(indexed));
+                }
+            });
         }
-
     }
 }
