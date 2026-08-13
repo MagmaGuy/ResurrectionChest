@@ -15,7 +15,6 @@ public class ContentPackageConfigFields extends CustomConfigFields {
     private List<String> description;
     @Getter
     private String downloadLink;
-    @Getter
     private String folderName;
     @Getter
     @Setter

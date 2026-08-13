@@ -5,6 +5,7 @@ import com.magmaguy.magmacore.command.CommandManager;
 import com.magmaguy.magmacore.initialization.PluginInitializationConfig;
 import com.magmaguy.magmacore.initialization.PluginInitializationContext;
 import com.magmaguy.magmacore.initialization.PluginInitializationState;
+import com.magmaguy.magmacore.location.LocationQueryRegistry;
 import com.magmaguy.magmacore.nightbreak.NightbreakFirstTimeSetupSpec;
 import com.magmaguy.magmacore.nightbreak.NightbreakPluginBootstrap;
 import com.magmaguy.magmacore.nightbreak.NightbreakPluginHooks;
@@ -100,14 +101,18 @@ public class ResurrectionChest extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        boolean shutdownDuringInitialization =
+                MagmaCore.getInitializationState(this.getName())
+                        == PluginInitializationState.INITIALIZING;
         MagmaCore.requestInitializationShutdown(this);
-        if (MagmaCore.getInitializationState(this.getName()) == PluginInitializationState.INITIALIZING) {
-            Bukkit.getServer().getScheduler().cancelTasks(MetadataHandler.PLUGIN);
-            MagmaCore.shutdown(this);
+        teardown();
+        if (shutdownDuringInitialization)
             Bukkit.getLogger().info("[ResurrectionChest] Shutdown during initialization.");
-            return;
-        }
+        else
+            Bukkit.getLogger().info("[ResurrectionChest] Shutdown!");
+    }
 
+    private void teardown() {
         Bukkit.getServer().getScheduler().cancelTasks(MetadataHandler.PLUGIN);
         MagmaCore.shutdown(this);
         HandlerList.unregisterAll(MetadataHandler.PLUGIN);
@@ -117,7 +122,6 @@ public class ResurrectionChest extends JavaPlugin {
         ResurrectionChestObject.shutdown();
         ResurrectionChestObject.getResurrectionChests().values().forEach(ResurrectionChestObject::chunkUnload);
         ResurrectionChestObject.getResurrectionChests().clear();
-        Bukkit.getLogger().info("[ResurrectionChest] Shutdown!");
     }
 
     private void asyncInitialization(PluginInitializationContext initializationContext) {
@@ -133,6 +137,12 @@ public class ResurrectionChest extends JavaPlugin {
     }
 
     private void syncInitialization(PluginInitializationContext initializationContext) {
+        initializationContext.step("Protection Providers");
+        // Attach the WorldGuard / GriefPrevention adapters now so their attach attempts
+        // show up in the startup log instead of being deferred until the first player
+        // tries to register a resurrection chest.
+        LocationQueryRegistry.initializeBuiltInProtectionProviders();
+
         initializationContext.step("Event Listeners");
         this.getServer().getPluginManager().registerEvents(new DeathChestConstructor(), this);
         this.getServer().getPluginManager().registerEvents(new DeathChestRemover(), this);

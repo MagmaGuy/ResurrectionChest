@@ -7,10 +7,9 @@ plugins {
 
 //Fixes issues related to special characters being used
 compileJava.options.encoding = "UTF-8"
-compileTestJava.options.encoding = "UTF-8"
 
 group = "com.magmaguy"
-version = "2.2.5"
+version = "2.3.0"
 description = "ResurrectionChest"
 
 repositories {
@@ -28,15 +27,12 @@ repositories {
 
     //Bstats API
     maven { url = 'https://repo.codemc.org/repository/maven-public' }
-    //Paper API for MockBukkit tests
-    maven { url = 'https://repo.papermc.io/repository/maven-public/' }
 
     //MagmaGuy's Repository
     maven { url = 'https://repo.magmaguy.com/releases' }
     maven { url = "https://repo.magmaguy.com/snapshots" }
 
     mavenCentral()
-    mavenLocal()
 }
 
 dependencies {
@@ -57,11 +53,6 @@ dependencies {
     //lombok
     compileOnly 'org.projectlombok:lombok:1.18.34'
     annotationProcessor 'org.projectlombok:lombok:1.18.34'
-
-    testImplementation "io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT"
-    testImplementation "org.mockbukkit.mockbukkit:mockbukkit-v1.21:4.110.0"
-    testImplementation 'org.junit.jupiter:junit-jupiter:6.0.3'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher:6.0.3'
 }
 
 configurations.all {
@@ -109,10 +100,6 @@ if (mcDistDir) {
 
 tasks.withType(JavaCompile) {
     options.encoding = 'UTF-8'
-}
-
-test {
-    useJUnitPlatform()
 }
 
 java {

@@ -4,28 +4,28 @@ import com.magmaguy.magmacore.nightbreak.NightbreakContentRefresher;
 import com.magmaguy.resurrectionchest.MetadataHandler;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.util.ArrayList;
+import java.time.Duration;
 
 public final class RCPackageRefresher {
-    private static final long REFRESH_COOLDOWN_MS = 5 * 60 * 1000L;
-    private static long lastRefresh = 0L;
+    private static final Duration REFRESH_COOLDOWN = Duration.ofMinutes(5);
+    private static final String CATALOG_KEY = "nightbreak-packages";
 
     private RCPackageRefresher() {
     }
 
     public static void refreshContentAndAccess() {
-        long now = System.currentTimeMillis();
-        if (now - lastRefresh < REFRESH_COOLDOWN_MS) return;
-        lastRefresh = now;
-        NightbreakContentRefresher.refreshAsync(
+        NightbreakContentRefresher.refreshAsyncIfDue(
                 (JavaPlugin) MetadataHandler.PLUGIN,
-                new ArrayList<>(RCPackage.getRcPackages().values()),
+                CATALOG_KEY,
+                REFRESH_COOLDOWN,
+                () -> RCPackage.getRcPackages().values(),
                 rcPackage -> true,
                 outdated -> {
                 });
     }
 
     public static void reset() {
-        lastRefresh = 0L;
+        NightbreakContentRefresher.resetRefreshCooldown(
+                (JavaPlugin) MetadataHandler.PLUGIN, CATALOG_KEY);
     }
 }

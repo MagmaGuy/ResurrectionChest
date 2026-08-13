@@ -5,6 +5,7 @@ import com.magmaguy.magmacore.command.CommandData;
 import com.magmaguy.magmacore.nightbreak.NightbreakPluginBootstrap;
 import com.magmaguy.resurrectionchest.MetadataHandler;
 import org.bukkit.command.CommandSender;
+import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.List;
 
@@ -17,10 +18,9 @@ public class ReloadCommand extends AdvancedCommand {
     }
 
     public static void reload(CommandSender sender) {
-        NightbreakPluginBootstrap.setPendingReloadSender((org.bukkit.plugin.java.JavaPlugin) MetadataHandler.PLUGIN, sender);
-        MetadataHandler.PLUGIN.onDisable();
-        MetadataHandler.PLUGIN.onLoad();
-        MetadataHandler.PLUGIN.onEnable();
+        NightbreakPluginBootstrap.reloadPlugin(
+                (JavaPlugin) MetadataHandler.PLUGIN,
+                sender);
     }
 
     @Override

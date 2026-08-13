@@ -20,7 +20,7 @@ custom FreeMinecraftModels chest props for Nightbreak content packs.
 
 - Java 21.
 - A Spigot or Paper server. `plugin.yml` declares `api-version: 1.21.4`; the build compiles against the Spigot
-  `1.21.4` API.
+  `26.2-R0.1-SNAPSHOT` API.
 - No hard plugin dependencies. FreeMinecraftModels is a soft dependency used only for optional custom chest visuals.
   MagmaCore is shaded into the plugin jar.
 
@@ -46,6 +46,7 @@ All commands are under `/resurrectionchest`.
 | `/resurrectionchest downloadall` | Checks for a plugin update and downloads all available content packs. |
 | `/resurrectionchest downloadpluginupdate` | Downloads only the plugin update when Nightbreak has a newer release. |
 | `/resurrectionchest updatecontent` | Updates installed ResurrectionChest content packs. |
+| `/resurrectionchest clear` | Clears all tracked resurrection chest blocks and data. |
 | `/resurrectionchest reload` | Reloads the plugin. |
 
 ## Permissions
@@ -113,7 +114,7 @@ Maven:
 <dependency>
     <groupId>com.magmaguy</groupId>
     <artifactId>ResurrectionChest</artifactId>
-    <version>2.1.1</version>
+    <version>2.2.5</version>
     <scope>provided</scope>
 </dependency>
 ```
@@ -128,7 +129,7 @@ repositories {
 }
 
 dependencies {
-    compileOnly("com.magmaguy:ResurrectionChest:2.1.1")
+    compileOnly("com.magmaguy:ResurrectionChest:2.2.5")
 }
 ```
 

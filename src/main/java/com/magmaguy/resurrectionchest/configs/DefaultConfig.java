@@ -3,6 +3,8 @@ package com.magmaguy.resurrectionchest.configs;
 import com.magmaguy.magmacore.config.ConfigurationEngine;
 import com.magmaguy.magmacore.config.ConfigurationFile;
 import com.magmaguy.magmacore.nightbreak.NightbreakPluginUpdater;
+import com.magmaguy.magmacore.util.Logger;
+import org.bukkit.Particle;
 
 import java.util.Arrays;
 import java.util.List;
@@ -18,17 +20,18 @@ public class DefaultConfig extends ConfigurationFile {
     public static boolean setupDone;
     public static String resurrectionChestSignName;
     public static boolean enableHighCompatibility;
-    public static boolean autoDownloadPluginUpdates;
     public static boolean enableDurabilityLossOnDeath;
     public static int durabilityToLower;
     public static String chestCreationMessage;
     public static String chestDestructionMessage;
     public static String chestMissingMessage;
+    public static String chestProtectedRegionMessage;
     public static String deathMessage;
     public static boolean enableParticleEffects;
     public static String particleEffect1;
     public static String particleEffect2;
     public static String particleEffect3;
+    public static Particle resolvedParticleEffect;
     public static List<String> blacklistedWorlds;
     public static boolean storeXP;
     public static double xpPercentage;
@@ -48,10 +51,16 @@ public class DefaultConfig extends ConfigurationFile {
         ConfigurationEngine.writeValue(setupDone, instance.file, instance.getFileConfiguration(), "setupDone");
     }
 
+    private static double clampXpPercentage(double configuredRatio) {
+        if (Double.isNaN(configuredRatio) || configuredRatio <= 0D) return 0D;
+        if (configuredRatio >= 1D) return 1D;
+        return configuredRatio;
+    }
+
     @Override
     public void initializeValues() {
         setupDone = ConfigurationEngine.setBoolean(fileConfiguration, "setupDone", false);
-        autoDownloadPluginUpdates = NightbreakPluginUpdater.setAutoDownloadConfigDefault(fileConfiguration);
+        NightbreakPluginUpdater.setAutoDownloadConfigDefault(fileConfiguration);
         resurrectionChestSignName = ConfigurationEngine.setString(fileConfiguration, "Input name for death chest", "[DeathChest]");
         enableHighCompatibility = ConfigurationEngine.setBoolean(fileConfiguration, "Enable high compatibility / low security mode for plugin conflicts", false);
         enableDurabilityLossOnDeath = ConfigurationEngine.setBoolean(fileConfiguration, "Lower worn armor's durability on death", true);
@@ -59,14 +68,22 @@ public class DefaultConfig extends ConfigurationFile {
         chestCreationMessage = ConfigurationEngine.setString(fileConfiguration, "Chest creation message", "&8[ResurrectionChest] &aYou've created your Death Chest!");
         chestDestructionMessage = ConfigurationEngine.setString(fileConfiguration, "Chest destruction message", "&8[ResurrectionChest] &cYour Death Chest has been destroyed!");
         chestMissingMessage = ConfigurationEngine.setString(fileConfiguration, "Chest missing message", "&8[ResurrectionChest] &4Your Death Chest is missing!");
+        chestProtectedRegionMessage = ConfigurationEngine.setString(fileConfiguration, "Chest protected region message", "&8[ResurrectionChest] &cYou can't create a Death Chest here - this area is protected!");
         deathMessage = ConfigurationEngine.setString(fileConfiguration, "Death message", "&8[ResurrectionChest] &aYour items have been moved to your Death Chest!");
         enableParticleEffects = ConfigurationEngine.setBoolean(fileConfiguration, "Enable particle effects for death chests", true);
         particleEffect1 = ConfigurationEngine.setString(fileConfiguration, "Particle effect 1", "ENCHANTMENT_TABLE");
         particleEffect2 = ConfigurationEngine.setString(fileConfiguration, "Particle effect 2", "ENCHANTMENT_TABLE");
         particleEffect3 = ConfigurationEngine.setString(fileConfiguration, "Particle effect 3", "PORTAL");
+        try {
+            resolvedParticleEffect = Particle.valueOf(particleEffect3);
+        } catch (Exception exception) {
+            Logger.warn("Invalid particle effect \"" + particleEffect3 + "\" in \"Particle effect 3\"! Defaulting to PORTAL.");
+            resolvedParticleEffect = Particle.PORTAL;
+        }
         blacklistedWorlds = ConfigurationEngine.setList(fileConfiguration, "blacklistedWorlds", Arrays.asList("none"));
         storeXP = ConfigurationEngine.setBoolean(fileConfiguration, "storeXP", true);
-        xpPercentage = ConfigurationEngine.setDouble(fileConfiguration, "xpPercentageKept", 0.75);
+        xpPercentage = clampXpPercentage(
+                ConfigurationEngine.setDouble(fileConfiguration, "xpPercentageKept", 0.75));
         deathChestNameTag = ConfigurationEngine.setString(fileConfiguration, "deathChestNameTag", "$playerName's &fResurrection Chest");
         freeSingleDeathChestModelName = ConfigurationEngine.setString(fileConfiguration, "freeSingleDeathChestModelName", "resurrectionchest_free_single");
         freeDoubleDeathChestModelName = ConfigurationEngine.setString(fileConfiguration, "freeDoubleDeathChestModelName", "resurrectionchest_free_double");

@@ -1,12 +1,11 @@
 package com.magmaguy.resurrectionchest.thirdparty;
 
-import com.magmaguy.freeminecraftmodels.MetadataHandler;
 import com.magmaguy.freeminecraftmodels.api.ModeledEntityManager;
 import com.magmaguy.freeminecraftmodels.config.props.PropBlocks;
 import com.magmaguy.freeminecraftmodels.customentity.PropEntity;
 import com.magmaguy.freeminecraftmodels.dataconverter.FileModelConverter;
 import com.magmaguy.magmacore.util.Logger;
-import com.magmaguy.resurrectionchest.ResurrectionChest;
+import com.magmaguy.resurrectionchest.MetadataHandler;
 import com.magmaguy.resurrectionchest.ResurrectionChestObject;
 import com.magmaguy.resurrectionchest.configs.DefaultConfig;
 import org.bukkit.*;
@@ -20,16 +19,14 @@ import java.util.List;
 import java.util.UUID;
 
 public class CustomModel {
-    public final static NamespacedKey RESURRECTIONCHEST_OWNER = new NamespacedKey(ResurrectionChest.plugin, "resurrectionchest_owner");
-    public final ResurrectionChestObject resurrectionChestObject;
+    private final ResurrectionChestObject resurrectionChestObject;
     private final PropEntity propEntity;
 
-    private CustomModel(Location location, UUID uuid, ResurrectionChestObject resurrectionChestObject, PropEntity propEntity) {
+    private CustomModel(Location location, ResurrectionChestObject resurrectionChestObject, PropEntity propEntity) {
         this.resurrectionChestObject = resurrectionChestObject;
         Player player = Bukkit.getPlayer(resurrectionChestObject.getUuid());
 
         this.propEntity = propEntity;
-        propEntity.setCustomDataString(RESURRECTIONCHEST_OWNER, uuid.toString());
         propEntity.setPersistent(false);
 
         if (player != null)
@@ -48,14 +45,14 @@ public class CustomModel {
             propBlocks.add(new PropBlocks(signLocation, Material.AIR));
         }
         propEntity.setPropBlocks(propBlocks);
-        setupResurrectionChestCallbacks(uuid, location);
+        setupResurrectionChestCallbacks(resurrectionChestObject.getUuid(), location);
     }
 
     public static boolean FMMIsEnabled() {
         return Bukkit.getPluginManager().isPluginEnabled("FreeMinecraftModels");
     }
 
-    public static CustomModel CreateChestProp(Location location, UUID uuid, ResurrectionChestObject resurrectionChestObject, String modelName) {
+    public static CustomModel CreateChestProp(Location location, ResurrectionChestObject resurrectionChestObject, String modelName) {
         if (!FMMIsEnabled() || FileModelConverter.getConvertedFileModels().get(modelName) == null) return null;
         PropEntity propEntity = findLoadedProp(modelName, location);
         if (propEntity == null) {
@@ -66,7 +63,7 @@ public class CustomModel {
                     + "' at " + formatBlockLocation(location) + ". A duplicate prop is probably already present.");
             return null;
         }
-        return new CustomModel(location, uuid, resurrectionChestObject, propEntity);
+        return new CustomModel(location, resurrectionChestObject, propEntity);
     }
 
     private static PropEntity findLoadedProp(String modelName, Location location) {
@@ -113,14 +110,15 @@ public class CustomModel {
                 })
                 // Right click callback - open the chest
                 .setRightClickCallback((player, entity) -> {
-                    // Check if there's still a chest block at the location
-                    if (chestLocation.getBlock().getType() != Material.CHEST) {
-                        player.sendMessage(ChatColor.RED + "The chest block is missing!");
+                    // Require the current registration's owner/type tags, not
+                    // merely a replacement chest at the old coordinates.
+                    if (!resurrectionChestObject.hasUsableTrackedChest()) {
+                        player.sendMessage(ChatColor.translateAlternateColorCodes('&', DefaultConfig.chestMissingMessage));
                         return;
                     }
 
                     // Get the chest tile entity and open it
-                    Chest chestBlock = (Chest) chestLocation.getBlock().getState();
+                    Chest chestBlock = (Chest) resurrectionChestObject.getLocation().getBlock().getState();
                     Inventory chestInventory = chestBlock.getInventory();
 
                     // Play chest open sound
@@ -134,7 +132,7 @@ public class CustomModel {
 
                         @Override
                         public void run() {
-                            propEntity.showFakePropBlocksToAllPlayers();
+                            refreshPropBlocks();
                             counter++;
                             if (counter > 1) {
                                 cancel();

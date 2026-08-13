@@ -9,21 +9,18 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
-import org.bukkit.configuration.file.FileConfiguration;
 
-import java.io.File;
 import java.util.Map;
 import java.util.UUID;
 
 public class PlayerDataConfig extends ConfigurationFile {
 
+    public static final int TRACKED_BLOCK_SCHEMA_VERSION = 1;
+
     @Getter
     private static PlayerDataConfig instance;
 
-    public record PlayerData(Location location, String chestModel) {
-    }
-
-    public record RawPlayerData(String locationString, String chestModel) {
+    public record RawPlayerData(String locationString, String chestModel, int trackedBlockSchemaVersion) {
     }
 
     public PlayerDataConfig() {
@@ -40,21 +37,24 @@ public class PlayerDataConfig extends ConfigurationFile {
         String playerPath = uuid.toString();
         instance.fileConfiguration.set(playerPath + ".location", LocationParser.serializeLocation(location));
         instance.fileConfiguration.set(playerPath + ".chestModel", chestModel);
+        instance.fileConfiguration.set(playerPath + ".trackedBlockSchemaVersion", TRACKED_BLOCK_SCHEMA_VERSION);
         ConfigurationEngine.fileSaverCustomValues(instance.fileConfiguration, instance.file);
     }
 
-    public static PlayerData getPlayerData(UUID uuid) {
-        Map<String, Object> data = instance.fileConfiguration.getConfigurationSection(uuid.toString()).getValues(false);
-        Location location = LocationParser.parseLocation((String) data.get("location"));
-        String chestModel = (String) data.get("chestModel");
-        return new PlayerData(location, chestModel);
+    public static void markTrackedBlockSchemaCurrent(UUID uuid) {
+        instance.fileConfiguration.set(uuid + ".trackedBlockSchemaVersion", TRACKED_BLOCK_SCHEMA_VERSION);
+        ConfigurationEngine.fileSaverCustomValues(instance.fileConfiguration, instance.file);
     }
 
     public static RawPlayerData getRawPlayerData(UUID uuid) {
         Map<String, Object> data = instance.fileConfiguration.getConfigurationSection(uuid.toString()).getValues(false);
         String locationString = (String) data.get("location");
         String chestModel = (String) data.get("chestModel");
-        return new RawPlayerData(locationString, chestModel);
+        Object rawSchemaVersion = data.get("trackedBlockSchemaVersion");
+        int trackedBlockSchemaVersion = rawSchemaVersion instanceof Number number
+                ? number.intValue()
+                : 0;
+        return new RawPlayerData(locationString, chestModel, trackedBlockSchemaVersion);
     }
 
     public static void unregisterDeathChestEntry(ResurrectionChestObject resurrectionChestObject) {
@@ -63,8 +63,6 @@ public class PlayerDataConfig extends ConfigurationFile {
         Player player = Bukkit.getPlayer(resurrectionChestObject.getUuid());
         if (player != null && player.isOnline())
             player.sendMessage(ChatColor.translateAlternateColorCodes('&', DefaultConfig.chestDestructionMessage));
-
-        ResurrectionChestObject.getResurrectionChests().remove(resurrectionChestObject.getUuid());
     }
 
     @Override
