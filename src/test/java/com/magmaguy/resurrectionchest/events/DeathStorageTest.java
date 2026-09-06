@@ -1,6 +1,7 @@
 package com.magmaguy.resurrectionchest.events;
 
 import com.magmaguy.resurrectionchest.MetadataHandler;
+import com.magmaguy.resurrectionchest.LocationParser;
 import com.magmaguy.resurrectionchest.PersistentObjectHandler;
 import com.magmaguy.resurrectionchest.ResurrectionChest;
 import com.magmaguy.resurrectionchest.ResurrectionChestObject;
@@ -10,8 +11,13 @@ import net.kyori.adventure.text.Component;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Chest;
+import org.bukkit.block.Sign;
+import org.bukkit.block.BlockFace;
+import org.bukkit.block.data.type.WallSign;
+import org.bukkit.block.sign.Side;
 import org.bukkit.damage.DamageSource;
 import org.bukkit.damage.DamageType;
+import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.Damageable;
@@ -55,14 +61,23 @@ class DeathStorageTest {
         DefaultConfig.chestMissingMessage = "Missing.";
         DefaultConfig.chestDestructionMessage = "Removed.";
         DefaultConfig.deathChestRemovedMessage = "Removed.";
+        DefaultConfig.resurrectionChestSignName = "[DeathChest]";
+        DefaultConfig.chestCreationMessage = "Created.";
+        DefaultConfig.chestProtectedRegionMessage = "Protected.";
         player = server.addPlayer();
         player.addAttachment(plugin, "resurrectionchest.use", true);
-        Location location = new Location(server.addSimpleWorld("world"), 8, 64, 8);
+        Location location = new Location(server.addSimpleWorld("death-storage"), 8, 64, 8);
         location.getChunk().load();
         location.getBlock().setType(Material.CHEST);
         player.teleport(location.clone().add(0, 1, 0));
-        ResurrectionChestObject registration = new ResurrectionChestObject(player, location);
-        assertTrue(registration.markTrackedBlocks());
+        server.getPluginManager().registerEvents(new DeathChestConstructor(), plugin);
+        server.getPluginManager().registerEvents(new DeathChestRemover(), plugin);
+        assertFalse(placeSign(location, 0).isCancelled());
+        ResurrectionChestObject registration = ResurrectionChestObject.getResurrectionChest(player);
+        assertNotNull(registration);
+        assertTrue(registration.hasUsableTrackedChest());
+        assertTrue(registration.isTrackedSign(location.getBlock().getRelative(BlockFace.NORTH)));
+        assertPersistedAt(location);
         chest = (Chest) location.getBlock().getState();
         server.getPluginManager().registerEvents(new DeathEvent(), plugin);
     }
@@ -74,6 +89,27 @@ class DeathStorageTest {
         PersistentObjectHandler.shutdown();
         MockBukkit.unmock();
         ResurrectionChest.plugin = MetadataHandler.PLUGIN = null;
+    }
+
+    @Test
+    void secondLineRegistrationReplacesTheOwnedChestAndRejectsOtherPlayers() {
+        Location replacement = chest.getLocation().clone().add(3, 0, 0);
+        replacement.getBlock().setType(Material.CHEST);
+        assertFalse(placeSign(replacement, 1).isCancelled());
+        ResurrectionChestObject created = ResurrectionChestObject.getResurrectionChest(player);
+        assertEquals(replacement.getBlock(), created.getLocation().getBlock());
+        assertTrue(created.hasUsableTrackedChest());
+        assertTrue(created.isTrackedSign(replacement.getBlock().getRelative(BlockFace.NORTH)));
+        assertPersistedAt(replacement);
+        assertEquals(1, ResurrectionChestObject.getResurrectionChests().size());
+        assertEquals(Material.AIR, chest.getBlock().getRelative(BlockFace.NORTH).getType());
+        PlayerMock owner = player;
+        player = server.addPlayer();
+        player.addAttachment(ResurrectionChest.plugin, "resurrectionchest.use", true);
+        assertTrue(placeSign(replacement, 0).isCancelled());
+        assertNull(ResurrectionChestObject.getResurrectionChest(player));
+        assertSame(created, ResurrectionChestObject.getResurrectionChest(owner));
+        assertTrue(created.hasUsableTrackedChest());
     }
 
     @Test
@@ -144,5 +180,34 @@ class DeathStorageTest {
     private PlayerDeathEvent death(ItemStack... drops) {
         return new PlayerDeathEvent(player, DamageSource.builder(DamageType.GENERIC).build(),
                 new ArrayList<>(List.of(drops)), 50, Component.text("died"), true);
+    }
+
+    private SignChangeEvent placeSign(Location chestLocation, int markerLine) {
+        var sign = chestLocation.getBlock().getRelative(BlockFace.NORTH);
+        if (sign.getType() != Material.OAK_WALL_SIGN) sign.setType(Material.OAK_WALL_SIGN);
+        WallSign data = (WallSign) sign.getBlockData();
+        data.setFacing(BlockFace.NORTH);
+        sign.setBlockData(data);
+        List<Component> lines = new ArrayList<>(List.of(Component.empty(), Component.empty(), Component.empty(), Component.empty()));
+        lines.set(markerLine, Component.text("[DeathChest]"));
+        SignChangeEvent event = new SignChangeEvent(sign, player, lines, Side.FRONT);
+        server.getPluginManager().callEvent(event);
+        // MockBukkit dispatches the event but does not apply the accepted text as Paper does.
+        if (!event.isCancelled()) {
+            Sign state = (Sign) sign.getState();
+            for (int line = 0; line < 4; line++) state.getSide(Side.FRONT).line(line, event.line(line));
+            state.update();
+        }
+        server.getScheduler().performOneTick();
+        assertEquals(BlockFace.NORTH, ((WallSign) sign.getBlockData()).getFacing(), "sign facing after event completion");
+        return event;
+    }
+
+    private void assertPersistedAt(Location location) {
+        new PlayerDataConfig(directory.resolve("playerData.yml").toFile());
+        PlayerDataConfig.RawPlayerData stored = PlayerDataConfig.getRawPlayerData(player.getUniqueId());
+        assertEquals(location.getBlock(), LocationParser.parseLocation(stored.locationString()).getBlock());
+        assertEquals("none", stored.chestModel());
+        assertEquals(1, stored.trackedBlockSchemaVersion());
     }
 }
