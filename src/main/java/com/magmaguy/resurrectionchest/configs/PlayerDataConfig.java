@@ -10,6 +10,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
+import java.io.File;
 import java.util.Map;
 import java.util.UUID;
 
@@ -25,6 +26,11 @@ public class PlayerDataConfig extends ConfigurationFile {
 
     public PlayerDataConfig() {
         super("playerData.yml");
+        instance = this;
+    }
+
+    public PlayerDataConfig(File file) {
+        super(file);
         instance = this;
     }
 
