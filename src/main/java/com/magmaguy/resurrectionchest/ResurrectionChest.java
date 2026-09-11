@@ -43,7 +43,7 @@ public class ResurrectionChest extends JavaPlugin {
     public static final NightbreakFirstTimeSetupSpec FIRST_TIME_SETUP_SPEC = new NightbreakFirstTimeSetupSpec(
             "ResurrectionChest",
             "resurrectionchest.*",
-            null,
+            "/resurrectionchest initialize",
             "/resurrectionchest setup",
             "/resurrectionchest downloadall",
             "https://nightbreak.io/plugin/resurrectionchest/",
