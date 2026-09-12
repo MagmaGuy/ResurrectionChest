@@ -113,9 +113,11 @@ For missing custom visuals, verify FreeMinecraftModels and the installed pack se
 
 ## Developer API
 
+[Java class and method reference](https://wiki.nightbreak.io/javadoc/resurrectionchest/index.html).
+
 Integration scope and available configuration: [ResurrectionChest developer reference](https://wiki.nightbreak.io/developers#resurrectionchest). See the [Java API index](https://wiki.nightbreak.io/developers) for dependency setup and lifecycle guidance.
 
-Maven: `com.magmaguy:ResurrectionChest:2.3.1` from [MagmaGuy's repository](https://repo.magmaguy.com/releases). Use `provided` or `compileOnly` scope for the installed plugin.
+Maven: `com.magmaguy:ResurrectionChest:2.3.1` from [MagmaGuy's repository](https://repo.magmaguy.com/#/releases). Use `provided` or `compileOnly` scope for the installed plugin.
 
 ## Links
 
