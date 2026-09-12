@@ -111,37 +111,11 @@ Check `resurrectionchest.use`, the configured sign text, and whether the registe
 
 For missing custom visuals, verify FreeMinecraftModels and the installed pack separately from vanilla chest storage. Include server/plugin versions, the chest configuration, and the reproduction steps in a support report.
 
-## Repository
+## Developer API
 
-Maven:
+Integration scope and available configuration: [ResurrectionChest developer reference](https://wiki.nightbreak.io/developers#resurrectionchest). See the [Java API index](https://wiki.nightbreak.io/developers) for dependency setup and lifecycle guidance.
 
-```xml
-<repository>
-    <id>magmaguy-repo-releases</id>
-    <url>https://repo.magmaguy.com/releases</url>
-</repository>
-
-<dependency>
-    <groupId>com.magmaguy</groupId>
-    <artifactId>ResurrectionChest</artifactId>
-    <version>2.3.1</version>
-    <scope>provided</scope>
-</dependency>
-```
-
-Gradle:
-
-```kotlin
-repositories {
-    maven {
-        url = uri("https://repo.magmaguy.com/releases")
-    }
-}
-
-dependencies {
-    compileOnly("com.magmaguy:ResurrectionChest:2.3.1")
-}
-```
+Maven: `com.magmaguy:ResurrectionChest:2.3.1` from [MagmaGuy's repository](https://repo.magmaguy.com/releases). Use `provided` or `compileOnly` scope for the installed plugin.
 
 ## Links
 
