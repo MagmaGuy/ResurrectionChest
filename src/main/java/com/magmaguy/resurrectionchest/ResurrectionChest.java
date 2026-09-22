@@ -113,6 +113,7 @@ public class ResurrectionChest extends JavaPlugin {
     }
 
     private void teardown() {
+        com.magmaguy.resurrectionchest.thirdparty.FreeMinecraftModelsSync.shutdown();
         Bukkit.getServer().getScheduler().cancelTasks(MetadataHandler.PLUGIN);
         MagmaCore.shutdown(this);
         HandlerList.unregisterAll(MetadataHandler.PLUGIN);
@@ -164,6 +165,7 @@ public class ResurrectionChest extends JavaPlugin {
                 () -> new java.util.ArrayList<>(RCPackage.getRcPackages().values()),
                 ReloadCommand::reload);
 
+        com.magmaguy.resurrectionchest.thirdparty.FreeMinecraftModelsSync.initialize();
         initializationContext.step("Death Chests");
         ResurrectionChestObject.initializeConfigDeathchests();
         ResurrectionChestObject.startClock();

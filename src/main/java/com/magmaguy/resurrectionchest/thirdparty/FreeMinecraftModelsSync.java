@@ -6,51 +6,59 @@ import com.magmaguy.resurrectionchest.MetadataHandler;
 import com.magmaguy.resurrectionchest.ResurrectionChestObject;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
-import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.scheduler.BukkitTask;
 
 public final class FreeMinecraftModelsSync {
-    private static final int MAX_ATTEMPTS = 120;
+    private static boolean listening;
+    private static BukkitTask refreshTask;
 
-    private FreeMinecraftModelsSync() {
+    private FreeMinecraftModelsSync() {}
+
+    public static void initialize() {
+        if (listening || !CustomModel.FMMIsEnabled()) return;
+        // Keep the optional FMM event class out of listeners loaded without FMM.
+        Bukkit.getPluginManager().registerEvents(new ReloadCompletionListener(), MetadataHandler.PLUGIN);
+        listening = true;
+    }
+
+    public static void shutdown() {
+        if (refreshTask != null) refreshTask.cancel();
+        refreshTask = null;
+        listening = false;
     }
 
     public static void reloadAndRefreshModels(CommandSender sender) {
         if (!CustomModel.FMMIsEnabled()) {
-            if (sender != null) {
-                Logger.sendMessage(sender, "&eFreeMinecraftModels is not installed. ResurrectionChest model files were updated on disk, but custom chest props will stay disabled until FreeMinecraftModels is installed.");
-            }
+            if (sender != null) Logger.sendMessage(sender, "&eFreeMinecraftModels is not installed. ResurrectionChest model files were updated on disk, but custom chest props will stay disabled until FreeMinecraftModels is installed.");
             ResurrectionChestObject.refreshAllModels();
             return;
         }
-
+        initialize();
+        // The completion event, including externally initiated reloads, owns refresh.
         com.magmaguy.freeminecraftmodels.commands.ReloadCommand.reloadPlugin(
                 sender != null ? sender : Bukkit.getConsoleSender());
-        refreshModelsWhenReady();
     }
 
     public static void refreshModelsWhenReady() {
-        if (!CustomModel.FMMIsEnabled()) {
-            ResurrectionChestObject.refreshAllModels();
-            return;
+        initialize();
+        if (!CustomModel.FMMIsEnabled() || MagmaCore.isPluginReady("FreeMinecraftModels")) queueRefresh();
+    }
+
+    private static void queueRefresh() {
+        if (refreshTask != null) return;
+        refreshTask = Bukkit.getScheduler().runTask(MetadataHandler.PLUGIN, () -> {
+            refreshTask = null;
+            if (!CustomModel.FMMIsEnabled() || MagmaCore.isPluginReady("FreeMinecraftModels"))
+                ResurrectionChestObject.refreshAllModels();
+        });
+    }
+
+    public static final class ReloadCompletionListener implements Listener {
+        @EventHandler
+        public void onReloaded(com.magmaguy.freeminecraftmodels.api.FmmReloadedEvent event) {
+            queueRefresh();
         }
-
-        new BukkitRunnable() {
-            int attempts = 0;
-
-            @Override
-            public void run() {
-                attempts++;
-                if (MagmaCore.isPluginReady("FreeMinecraftModels")) {
-                    ResurrectionChestObject.refreshAllModels();
-                    cancel();
-                    return;
-                }
-                if (attempts >= MAX_ATTEMPTS) {
-                    Logger.warn("Timed out waiting for FreeMinecraftModels to finish reloading. Refreshing ResurrectionChest models anyway.");
-                    ResurrectionChestObject.refreshAllModels();
-                    cancel();
-                }
-            }
-        }.runTaskTimer(MetadataHandler.PLUGIN, 10L, 10L);
     }
 }

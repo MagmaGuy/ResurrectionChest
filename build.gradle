@@ -50,7 +50,7 @@ dependencies {
     implementation (group: 'com.magmaguy', name: 'MagmaCore', version: '2.2.0-SNAPSHOT'){
         changing = true
     }
-    compileOnly (group: 'com.magmaguy', name: 'FreeMinecraftModels', version: '2.7.0'){
+    compileOnly (group: 'com.magmaguy', name: 'FreeMinecraftModels', version: '2.12.3'){
         changing = true
     }
     // org.reflections removed: nothing in src/ uses it, and it bundled

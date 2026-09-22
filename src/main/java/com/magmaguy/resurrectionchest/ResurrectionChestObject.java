@@ -177,7 +177,7 @@ public class ResurrectionChestObject implements PersistentObject {
     }
 
     private String determineModelName(Player player) {
-        if (player.hasPermission("resurrectionchest.model.premium") && FileModelConverter.getConvertedFileModels().get(DefaultConfig.premiumSingleDeathChestModelName) != null) {
+        if (player.hasPermission("resurrectionchest.model.premium") && FileModelConverter.containsModel(DefaultConfig.premiumSingleDeathChestModelName)) {
             return "resurrectionchest_angelic";
         } else if (player.hasPermission("resurrectionchest.model.free")) {
             return "resurrectionchest_free";
@@ -513,15 +513,21 @@ public class ResurrectionChestObject implements PersistentObject {
 
     public static int clearAllTrackedBlocks() {
         int removedBlocks = 0;
-        for (ResurrectionChestObject resurrectionChestObject : new ArrayList<>(resurrectionChests.values())) {
-            removedBlocks += resurrectionChestObject.clearTrackedBlocks();
+        List<UUID> removedRegistrations = new ArrayList<>();
+        try {
+            for (ResurrectionChestObject chest : new ArrayList<>(resurrectionChests.values())) {
+                removedBlocks += chest.clearTrackedBlocks();
+                removedRegistrations.add(chest.uuid);
+            }
+        } finally {
+            // Persist completed removals once even if a later chest fails to clear.
+            if (!removedRegistrations.isEmpty()) PlayerDataConfig.removePlayerData(removedRegistrations);
         }
         return removedBlocks;
     }
 
     private int clearTrackedBlocks() {
         if (location == null || location.getWorld() == null) {
-            PlayerDataConfig.removePlayerData(uuid);
             resurrectionChests.remove(uuid);
             if (persistentObjectHandler != null) persistentObjectHandler.remove();
             removeCustomModel();
@@ -553,7 +559,6 @@ public class ResurrectionChestObject implements PersistentObject {
             removedBlocks++;
         }
 
-        PlayerDataConfig.removePlayerData(uuid);
         if (persistentObjectHandler != null) persistentObjectHandler.remove();
         removeCustomModel();
         resurrectionChests.remove(uuid);

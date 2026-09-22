@@ -35,7 +35,11 @@ public class PlayerDataConfig extends ConfigurationFile {
     }
 
     public static void removePlayerData(UUID uuid) {
-        instance.fileConfiguration.set(uuid.toString(), null);
+        removePlayerData(java.util.List.of(uuid));
+    }
+
+    public static void removePlayerData(java.util.Collection<UUID> players) {
+        for (UUID uuid : players) instance.fileConfiguration.set(uuid.toString(), null);
         ConfigurationEngine.fileSaverCustomValues(instance.fileConfiguration, instance.file);
     }
 

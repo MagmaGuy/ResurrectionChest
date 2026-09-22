@@ -7,6 +7,11 @@ import org.bukkit.event.Listener;
 
 public class ModelInstallationListener implements Listener {
     @EventHandler
+    public void onPluginEnable(org.bukkit.event.server.PluginEnableEvent event) {
+        if (event.getPlugin().getName().equals("FreeMinecraftModels")) FreeMinecraftModelsSync.initialize();
+    }
+
+    @EventHandler
     public void onModelInstallation(ModelInstallationEvent event) {
         FreeMinecraftModelsSync.refreshModelsWhenReady();
     }

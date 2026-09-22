@@ -1,6 +1,5 @@
 package com.magmaguy.resurrectionchest.thirdparty;
 
-import com.magmaguy.freeminecraftmodels.api.ModeledEntityManager;
 import com.magmaguy.freeminecraftmodels.config.props.PropBlocks;
 import com.magmaguy.freeminecraftmodels.customentity.PropEntity;
 import com.magmaguy.freeminecraftmodels.dataconverter.FileModelConverter;
@@ -53,7 +52,7 @@ public class CustomModel {
     }
 
     public static CustomModel CreateChestProp(Location location, ResurrectionChestObject resurrectionChestObject, String modelName) {
-        if (!FMMIsEnabled() || FileModelConverter.getConvertedFileModels().get(modelName) == null) return null;
+        if (!FMMIsEnabled() || !FileModelConverter.containsModel(modelName)) return null;
         PropEntity propEntity = findLoadedProp(modelName, location);
         if (propEntity == null) {
             propEntity = PropEntity.spawnPropEntity(modelName, location);
@@ -69,11 +68,11 @@ public class CustomModel {
     private static PropEntity findLoadedProp(String modelName, Location location) {
         if (modelName == null || location == null || location.getWorld() == null) return null;
 
-        for (PropEntity propEntity : ModeledEntityManager.propEntities().values()) {
-            if (propEntity == null || propEntity.getUnderlyingEntity() == null) continue;
-            if (!modelName.equals(propEntity.getEntityID())) continue;
-            if (!sameBlock(location, propEntity.getUnderlyingEntity().getLocation())) continue;
-            return propEntity;
+        for (org.bukkit.entity.Entity entity : location.getChunk().getEntities()) {
+            if (!(entity instanceof org.bukkit.entity.ArmorStand stand) || !stand.isValid()) continue;
+            if (!modelName.equals(PropEntity.getPropEntityID(stand)) || !sameBlock(location, stand.getLocation())) continue;
+            PropEntity prop = PropEntity.respawnPropEntityFromArmorStand(modelName, stand);
+            if (prop != null) return prop;
         }
 
         return null;
