@@ -99,8 +99,16 @@ public class ResurrectionChest extends JavaPlugin {
         MagmaCore.exportSharedAssets(this);
     }
 
+    private volatile Metrics metrics;
+
     @Override
     public void onDisable() {
+        // bStats runs its own scheduler thread; without this every reload leaves one
+        // reporting for, and holding on to, the previous instance.
+        if (metrics != null) {
+            metrics.shutdown();
+            metrics = null;
+        }
         boolean shutdownDuringInitialization =
                 MagmaCore.getInitializationState(this.getName())
                         == PluginInitializationState.INITIALIZING;
@@ -174,6 +182,6 @@ public class ResurrectionChest extends JavaPlugin {
         MagmaCore.checkVersionUpdate("57541", "https://nightbreak.io/plugin/resurrectionchest/");
 
         initializationContext.step("Metrics");
-        new Metrics(this, 2677);
+        metrics = new Metrics(this, 2677);
     }
 }

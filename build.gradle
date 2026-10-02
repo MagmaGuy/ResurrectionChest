@@ -45,7 +45,7 @@ dependencies {
     //Spigot API
     compileOnly "org.spigotmc:spigot-api:26.3-R0.1-SNAPSHOT"
     //BStats API
-    implementation group: 'org.bstats', name: 'bstats-bukkit', version: '2.2.1'
+    implementation group: 'org.bstats', name: 'bstats-bukkit', version: '3.0.2'
     //MagmaCore
     implementation (group: 'com.magmaguy', name: 'MagmaCore', version: '2.2.0-SNAPSHOT'){
         changing = true
