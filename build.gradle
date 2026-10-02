@@ -9,7 +9,7 @@ plugins {
 compileJava.options.encoding = "UTF-8"
 
 group = "com.magmaguy"
-version = "2.3.5"
+version = "2.3.6"
 description = "ResurrectionChest"
 
 repositories {
