@@ -187,6 +187,7 @@ public class ResurrectionChestObject implements PersistentObject {
 
     private void setIsDoubleChest() {
         doubleChest = false;
+        loadOtherHalfAcrossChunkBorder();
         BlockState chestState = location.getBlock().getState();
         if (chestState instanceof Chest && ((Chest) chestState).getInventory() instanceof DoubleChestInventory)
             doubleChest = true;
@@ -223,6 +224,68 @@ public class ResurrectionChestObject implements PersistentObject {
     private boolean locationWorldAndChunkAreLoaded() {
         if (location == null || location.getWorld() == null) return false;
         return location.getWorld().isChunkLoaded(location.getBlockX() >> 4, location.getBlockZ() >> 4);
+    }
+
+    /**
+     * Paper only pairs two chest halves while both of their chunks are loaded,
+     * so a double chest that sits across a chunk border reads as a single
+     * 27-slot chest when only this half's chunk is loaded. That is the usual
+     * state when the owner dies far away. For a chest on a chunk edge that does
+     * not currently pair, this loads the chunk holding the other half named by
+     * the block data, once and without a plugin chunk ticket or force-loading,
+     * so the next getState() returns the whole double chest. Every other chest
+     * is left as it is.
+     *
+     * @return false only when the block data says this is half of a double
+     * chest but the halves still do not pair, so only this half can hold items
+     */
+    public boolean loadOtherHalfAcrossChunkBorder() {
+        if (!locationWorldAndChunkAreLoaded() || !isOnChunkEdge(location)) return true;
+
+        Block primaryBlock = location.getBlock();
+        if (!(primaryBlock.getState() instanceof Chest chest) ||
+                chest.getInventory() instanceof DoubleChestInventory)
+            return true;
+        if (!(primaryBlock.getBlockData() instanceof org.bukkit.block.data.type.Chest chestData) ||
+                chestData.getType() == org.bukkit.block.data.type.Chest.Type.SINGLE)
+            return true;
+
+        BlockFace otherHalfFace = otherChestHalfFace(chestData);
+        if (otherHalfFace == null) return false;
+        World world = location.getWorld();
+        int otherChunkX = (location.getBlockX() + otherHalfFace.getModX()) >> 4;
+        int otherChunkZ = (location.getBlockZ() + otherHalfFace.getModZ()) >> 4;
+        if (world.isChunkLoaded(otherChunkX, otherChunkZ)) return false;
+
+        world.getChunkAt(otherChunkX, otherChunkZ);
+        if (!(primaryBlock.getState() instanceof Chest pairedChest) ||
+                !(pairedChest.getInventory() instanceof DoubleChestInventory))
+            return false;
+        // Locations cached while the chest read as single only cover this half.
+        clearCachedBlocks();
+        return true;
+    }
+
+    /**
+     * Mirrors vanilla ChestBlock.getConnectedDirection: the other half of a
+     * LEFT chest is clockwise from its facing, the other half of a RIGHT chest
+     * counter-clockwise.
+     */
+    private static BlockFace otherChestHalfFace(org.bukkit.block.data.type.Chest chestData) {
+        boolean clockwise = chestData.getType() == org.bukkit.block.data.type.Chest.Type.LEFT;
+        return switch (chestData.getFacing()) {
+            case NORTH -> clockwise ? BlockFace.EAST : BlockFace.WEST;
+            case EAST -> clockwise ? BlockFace.SOUTH : BlockFace.NORTH;
+            case SOUTH -> clockwise ? BlockFace.WEST : BlockFace.EAST;
+            case WEST -> clockwise ? BlockFace.NORTH : BlockFace.SOUTH;
+            default -> null;
+        };
+    }
+
+    private static boolean isOnChunkEdge(Location location) {
+        int x = location.getBlockX() & 15;
+        int z = location.getBlockZ() & 15;
+        return x == 0 || x == 15 || z == 0 || z == 15;
     }
 
     private void loadChestState() {
@@ -294,6 +357,7 @@ public class ResurrectionChestObject implements PersistentObject {
                 !locationWorldAndChunkAreLoaded())
             return false;
 
+        loadOtherHalfAcrossChunkBorder();
         Block primaryBlock = location.getBlock();
         if (!isTrackedChest(primaryBlock) || !(primaryBlock.getState() instanceof Chest chest))
             return false;
@@ -404,6 +468,7 @@ public class ResurrectionChestObject implements PersistentObject {
 
     public List<Location> getAllChests() {
         if (allChests != null) return allChests;
+        loadOtherHalfAcrossChunkBorder();
         BlockState chestState = location.getBlock().getState();
         if (chestState instanceof Chest && ((Chest) chestState).getInventory() instanceof DoubleChestInventory doubleChestInventory) {
             return rememberChestLocations(List.of(
@@ -535,6 +600,8 @@ public class ResurrectionChestObject implements PersistentObject {
         }
 
         location.getWorld().getChunkAt(location);
+        // dropChestInventory below must see both halves of a chest across a chunk border.
+        loadOtherHalfAcrossChunkBorder();
 
         int removedBlocks = 0;
         for (Location signLocation : new ArrayList<>(getAllSigns())) {

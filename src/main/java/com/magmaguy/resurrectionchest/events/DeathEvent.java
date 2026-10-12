@@ -1,5 +1,7 @@
 package com.magmaguy.resurrectionchest.events;
 
+import com.magmaguy.magmacore.util.Logger;
+import com.magmaguy.resurrectionchest.LocationParser;
 import com.magmaguy.resurrectionchest.configs.DefaultConfig;
 import com.magmaguy.resurrectionchest.ResurrectionChestObject;
 import org.bukkit.ChatColor;
@@ -52,6 +54,9 @@ public class DeathEvent implements Listener {
         if (!chestLocation.getWorld().isChunkLoaded(chestLocation.getBlockX() >> 4, chestLocation.getBlockZ() >> 4)) {
             chestLocation.getWorld().getChunkAt(chestLocation);
         }
+        // A double chest across a chunk border only pairs while both of its chunks are
+        // loaded. Load the other half before the ownership check and the item transfer.
+        boolean allChestHalvesUsable = resurrectionChestObject.loadOtherHalfAcrossChunkBorder();
 
         Block deathChestBlock = chestLocation.getBlock();
 
@@ -60,6 +65,11 @@ public class DeathEvent implements Listener {
             resurrectionChestObject.remove();
             return;
         }
+
+        if (!allChestHalvesUsable)
+            Logger.warn("The ResurrectionChest of " + player.getName() + " at " +
+                    LocationParser.serializeLocation(chestLocation) +
+                    " is half of a double chest that did not pair with its other half. Only this half can store the items.");
 
         Chest deathChest = (Chest) deathChestBlock.getState();
 
