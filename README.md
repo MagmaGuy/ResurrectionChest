@@ -1,130 +1,133 @@
-# ResurrectionChest
+<p align="center">
+  <a href="https://discord.gg/GKyzTgT">
+    <img src="https://imgur.com/mvyJwOf.png" alt="Discord" width="180"/>
+  </a>
+  <a href="https://nightbreak.io/plugin/resurrectionchest/">
+    <img src="https://imgur.com/OLYJlM8.png" alt="Nightbreak" width="180"/>
+  </a>
+  <a href="https://www.patreon.com/magmaguy">
+    <img src="https://imgur.com/rWCe9W9.png" alt="Patreon" width="180"/>
+  </a>
+  <a href="https://wiki.nightbreak.io/ResurrectionChest/info">
+    <img src="https://imgur.com/M48vTUC.png" alt="Wiki" width="180"/>
+  </a>
+</p>
 
-ResurrectionChest is a Spigot/Paper plugin that stores a player's death drops inside a registered death chest instead
-of leaving the items scattered at the death location. It works with vanilla chests by default and can optionally display
-custom FreeMinecraftModels chest props for Nightbreak content packs.
+# 🟠 Why ResurrectionChest?
 
-[Download](https://nightbreak.io/plugin/resurrectionchest/) · [Modrinth](https://modrinth.com/plugin/resurrectionchest) · [Documentation](https://wiki.nightbreak.io/) · [Support](https://discord.gg/nightbreak)
+* **Never Lose Your Gear Again!** Set up death chests that automatically collect your items when you die — no more dangerous retrieval runs, or worse, losing items in inaccessible places!
+* **Simple Setup!** Just place a chest, add a sign with `[deathchest]`, and your gear is safe!
+* **Custom Models!** This plugin has [**FreeMinecraftModels**](https://nightbreak.io/plugin/freeminecraftmodels/) integration for stunning visual upgrades!
+* **Premium & Free Model Packs!** Choose from [**beautiful wooden chests (free DLC)**](https://nightbreak.io/plugin/resurrectionchest/#wooden-chest) or upgrade to [**premium chests**](https://nightbreak.io/plugin/resurrectionchest/#angelic-chest) for amazing designs!
+* **Permission-Based Models!** Control which players get access to different chest designs!
+* **Double Chest Support!** Works with single chests and double chests!
+* **Plugin Compatibility!** Designed to work seamlessly with protection plugins and other server systems!
+* **Keeps Your XP Too!** Stores 75% of your XP by default and gives it back the next time you open your chest. [XP handling](https://wiki.nightbreak.io/ResurrectionChest/config#xp-handling)
+* **Full Chest? No Problem!** Whatever does not fit stays at the spot where you died, and you get a warning. [Overflow handling](https://wiki.nightbreak.io/ResurrectionChest/config#overflow-handling)
+* **Optional Death Penalty!** Worn armor loses some durability when a death sends it to the chest. It is on by default and you can change the amount or turn it off. [Armor durability](https://wiki.nightbreak.io/ResurrectionChest/config#armor-durability-penalty)
+* **Respects Protected Land!** Players cannot register a death chest where WorldGuard or GriefPrevention would not let them build. [Region protection](https://wiki.nightbreak.io/ResurrectionChest/config#region-protection)
+* **World Blacklist!** Turn death chests off in the worlds you choose. [Config](https://wiki.nightbreak.io/ResurrectionChest/config#config-surface)
+* **In-Game Setup Menu!** Download the chest models from `/resurrectionchest setup` and apply plugin updates without restarting the server. [Setup menu](https://wiki.nightbreak.io/ResurrectionChest/setup#setup-menu)
+* **Want an even better experience?** Works great with [EliteMobs](https://nightbreak.io/plugin/elitemobs/), [Free Minecraft Models](https://nightbreak.io/plugin/freeminecraftmodels/), [BetterStructures](https://nightbreak.io/plugin/betterstructures/), and [Resource Pack Manager](https://nightbreak.io/plugin/resourcepackmanager/) — all free!
 
-## Features
+# 🟠 How to Setup
 
-- **Death chest storage**: Moves player death drops to the player's registered resurrection chest.
-- **Sign-based setup**: Players create a death chest by placing a chest and attaching a sign with the configured
-  trigger text, `[DeathChest]` by default.
-- **XP preservation**: Can store a configurable percentage of the player's XP in the death chest flow.
-- **Armor durability penalty**: Optionally lowers worn armor durability when a player dies.
-- **Missing-chest handling**: Detects missing or removed registered chests and notifies the player.
-- **Particle effects and name tags**: Highlights registered chests with configurable particles and display text.
-- **Optional custom models**: Integrates with FreeMinecraftModels for placed Wooden Chest and Angelic Chest props.
-- **Nightbreak content management**: Setup, download-all, and update flows for ResurrectionChest content packs.
+### For Admins:
+1. Put the **ResurrectionChest.jar** into your server and **restart your server**
+2. Optional: for the custom chest models, install [FreeMinecraftModels](https://nightbreak.io/plugin/freeminecraftmodels/) and do **/resurrectionchest setup** in-game. In-game downloads need your server linked to your [Nightbreak account](https://wiki.nightbreak.io/global/nightbreak_account_linking_and_tokens) with `/nightbreaklogin <token>`.
+3. You're done!
 
-## Requirements
+### For Players:
+1. Place down a chest (can even be a double chest)
+2. While sneaking, place a sign on the chest (any type of sign)
+3. Write: **[deathchest]**
+4. That's it!
 
-- Java 21 or the newer Java version required by your server. Check the download page for release compatibility.
-- A Spigot or Paper server. `plugin.yml` declares `api-version: 1.21.4`; the build compiles against the Spigot
-  `26.2-R0.1-SNAPSHOT` API.
-- No hard plugin dependencies. FreeMinecraftModels is a soft dependency used only for optional custom chest visuals.
-  MagmaCore is shaded into the plugin jar.
+<p align="center">
+  <a href="https://itch.io/s/201155/yearly-sale">
+    <img src="https://img.itch.zone/aW1nLzMwMDA3NjM3LnBuZw==/original/Mz69Hw.png" alt="Nightbreak Yearly Sale - 20% off through November 15" width="804"/>
+  </a>
+</p>
 
-## Installation
+# 🟠 Additional Downloads
 
-1. Drop `ResurrectionChest.jar` into your server's `plugins/` folder.
-2. Start the server to generate configuration, then run `/resurrectionchest initialize` as an administrator.
-3. Give players `resurrectionchest.use` if your permissions plugin does not use Bukkit defaults.
-4. To create a vanilla resurrection chest, place a chest and attach a sign containing `[DeathChest]`.
-5. Optional: install FreeMinecraftModels, then run `/resurrectionchest setup` or `/resurrectionchest downloadallcontent` to
-   install Nightbreak-managed chest model packs.
+<p align="center">
+  <a href="https://nightbreak.io/plugin/resurrectionchest/#wooden-chest">
+    <img src="https://i.postimg.cc/KYgF3PCt/Group-7091.png" alt="Wooden Chest" width="400"/>
+  </a>
+  <a href="https://nightbreak.io/plugin/resurrectionchest/#angelic-chest">
+    <img src="https://i.postimg.cc/Bn7QKQbZ/Group-7092.png" alt="Angelic Chest" width="400"/>
+  </a>
+</p>
 
-## Commands
+# 🟠 Third Party Plugin Compatibility
 
-All commands are under `/resurrectionchest`.
+This plugin was designed to avoid as many plugin conflicts as possible.
+All it does is add items to a chest if the player has set that chest up properly.
+It should not conflict with most protection systems, and death chests should get protected by other plugins with no issues.
 
-| Command | Description |
-| --- | --- |
-| `/resurrectionchest` | Shows plugin info and points admins to setup commands. |
-| `/resurrectionchest setup` | Opens the Nightbreak content setup and management menu. |
-| `/resurrectionchest initialize` | Opens the first-time setup flow. |
-| `/resurrectionchest downloadallcontent` | Downloads all available ResurrectionChest content packs for linked Nightbreak accounts. |
-| `/resurrectionchest downloadall` | Checks for a plugin update and downloads all available content packs. |
-| `/resurrectionchest downloadpluginupdate` | Downloads only the plugin update when Nightbreak has a newer release. |
-| `/resurrectionchest updatecontent` | Updates installed ResurrectionChest content packs. |
-| `/resurrectionchest clear` | Clears all tracked resurrection chest blocks and data. |
-| `/resurrectionchest reload` | Reloads the plugin. |
+ResurrectionChest does not lock the chest itself. If other players should not be able to open or break a death chest, protect it with your protection plugin.
 
-## Permissions
+**Note:** You need *FreeMinecraftModels* installed if you want to use ResurrectionChest with custom models.
 
-| Permission | Default | Grants |
-| --- | --- | --- |
-| `resurrectionchest.*` | op | Admin access to setup, initialize, Nightbreak content, and reload commands. |
-| `resurrectionchest.setup` | op | Access to `/resurrectionchest setup`. |
-| `resurrectionchest.initialize` | op | Access to `/resurrectionchest initialize`. |
-| `resurrectionchest.use` | true | Lets players create and use resurrection chests. |
-| `resurrectionchest.model.free` | true | Lets players use the free death chest model pack. |
-| `resurrectionchest.model.premium` | op | Lets players use the premium death chest model pack. |
+# 🟠 Permissions
 
-## Configuration
+The main permission is `resurrectionchest.use` (true by default - use negative permissions to disable for groups/players).
 
-On first run, ResurrectionChest generates `plugins/ResurrectionChest/config.yml` and player data files. Important
-settings include:
+Chest model permissions:
+- `resurrectionchest.model.free` - free model (true by default)
+- `resurrectionchest.model.premium` - angelic model (op by default)
 
-- `Input name for death chest`: Sign text used to register a chest, defaulting to `[DeathChest]`.
-- `Enable high compatibility / low security mode for plugin conflicts`: Compatibility mode for servers with plugins
-  that interfere with chest/sign checks.
-- `Lower worn armor's durability on death` and `Amount of durability to lower on death`: Armor durability penalty.
-- `storeXP` and `xpPercentageKept`: Whether XP is moved through the death chest flow and how much is kept.
-- `blacklistedWorlds`: Worlds where death chest behavior is disabled.
-- `deathChestNameTag` and particle settings: Visual feedback around registered chests.
-- Model names for the free and premium single/double chest props.
+Admin commands use `resurrectionchest.*`, `resurrectionchest.setup` and `resurrectionchest.initialize`, all op by default. See every [command and permission](https://wiki.nightbreak.io/ResurrectionChest/config#permissions) on the wiki.
 
-## Content packs
+# 🟠 View More by Magmaguy!
 
-ResurrectionChest ships with Nightbreak content-pack definitions:
+<p align="center">
+  <a href="https://nightbreak.io/plugin/elitemobs">
+    <img src="https://i.postimg.cc/zXQRn1jD/Elite-Mobs.png" width="300"/>
+  </a>
+  <a href="https://nightbreak.io/plugin/betterstructures">
+    <img src="https://i.postimg.cc/3rVK1rPq/Better-Structures.png" width="300"/>
+  </a>
+</p>
+<p align="center">
+  <a href="https://nightbreak.io/plugin/extractioncraft">
+    <img src="https://i.postimg.cc/gjV6VMYz/extractioncraft.png" width="300"/>
+  </a>
+  <a href="https://nightbreak.io/plugin/eternaltd">
+    <img src="https://i.postimg.cc/Kjf8cCGM/ETD.png" width="300"/>
+  </a>
+</p>
+<p align="center">
+  <a href="https://nightbreak.io/plugin/resourcepackmanager">
+    <img src="https://i.postimg.cc/Y0GdtBfX/Resource-Pack-Manager.png" width="300"/>
+  </a>
+  <a href="https://nightbreak.io/plugin/freeminecraftmodels">
+    <img src="https://i.postimg.cc/0Qxv6ZHd/FMM.png" width="300"/>
+  </a>
+</p>
+<p align="center">
+  <a href="https://nightbreak.io/plugin/betterfood">
+    <img src="https://i.postimg.cc/JzcDSB80/Better-Food.png" width="300"/>
+  </a>
+  <a href="https://nightbreak.io/plugin/resurrectionchest">
+    <img src="https://i.imgur.com/qpgXCge.png" width="300"/>
+  </a>
+</p>
 
-- **Wooden Chest**: Free custom chest model pack.
-- **Angelic Chest**: Premium custom chest model pack.
+# 🟠 Partner servers
 
-When FreeMinecraftModels is installed, the setup menu can install or uninstall these packs and reload FMM so the chest
-props refresh. Without FreeMinecraftModels, ResurrectionChest continues to work as a vanilla chest-based plugin.
+**Matecraft is the official partner server!** It is run by me and is always **up-to-date with the latest experimental features and new dungeons**! Check it out if you want to see my plugins the way they were originally developed to work! It's got a cozy community of dedicated and welcoming players that call it home!
 
-## Building from source
+<p align="center">
+  <strong>elitesurvival.matecraft.org</strong><br/>
+  <img src="https://i.postimg.cc/wBhbQ8vs/header.gif"/>
+</p>
 
-The project builds with Gradle (wrapper included) and shades runtime dependencies into a single jar:
+# 🟠 Developers
 
-```bash
-./gradlew shadowJar
-```
-
-On Windows:
-
-```bat
-gradlew.bat shadowJar
-```
-
-The shaded jar is written to `build/libs/ResurrectionChest.jar`. When `MC_DIST_DIR` or `mcDistDir` is set, the build
-also mirrors the jar into that shared dist folder.
-
-Publish a changed MagmaCore dependency to Maven Local before rebuilding.
-
-## Troubleshooting
-
-Check `resurrectionchest.use`, the configured sign text, and whether the registered chest still exists. Review world exclusions and the full death-event log if items are not stored. Back up player data and chest contents before administrative cleanup; `/resurrectionchest clear` removes registered chest blocks and data.
-
-For missing custom visuals, verify FreeMinecraftModels and the installed pack separately from vanilla chest storage. Include server/plugin versions, the chest configuration, and the reproduction steps in a support report.
-
-## Developer API
-
-[Java class and method reference](https://wiki.nightbreak.io/javadoc/resurrectionchest/index.html).
-
-Integration scope and available configuration: [ResurrectionChest developer reference](https://wiki.nightbreak.io/developers#resurrectionchest). See the [Java API index](https://wiki.nightbreak.io/developers) for dependency setup and lifecycle guidance.
-
-Maven: `com.magmaguy:ResurrectionChest:2.3.1` from [MagmaGuy's repository](https://repo.magmaguy.com/#/releases). Use `provided` or `compileOnly` scope for the installed plugin.
-
-## Links
-
-- [ResurrectionChest on Nightbreak](https://nightbreak.io/plugin/resurrectionchest/)
-- [ResurrectionChest on Spigot](https://www.spigotmc.org/resources/57541/)
-- [Discord](https://discord.gg/nightbreak)
-
-## License
-
-Source files carry their applicable license notices. Custom chest models and content packs retain their authors' distribution terms.
+- [Java API guide](https://wiki.nightbreak.io/developers#resurrectionchest): integration scope (ResurrectionChest has no custom event API)
+- [Generated Java reference](https://wiki.nightbreak.io/javadoc/resurrectionchest/index.html)
+- [Maven repository and coordinates](https://wiki.nightbreak.io/developers)
+- [Source code](https://github.com/MagmaGuy/ResurrectionChest)
+- License: source files carry their applicable license notices. Custom chest models and content packs keep their authors' distribution terms.
