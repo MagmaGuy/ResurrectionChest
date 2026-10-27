@@ -42,7 +42,7 @@ public class DeathChestConstructor implements Listener {
         if (!(attached.getBlockData() instanceof org.bukkit.block.data.type.Chest chest)) return;
         if (attached.getType() != Material.CHEST) return;
         if (isClaimedByAnotherPlayer(attached, event.getPlayer().getUniqueId())) {
-            event.getPlayer().sendMessage(ChatColor.RED + "That chest is already registered as another player's Resurrection Chest.");
+            event.getPlayer().sendMessage(ChatColor.translateAlternateColorCodes('&', DefaultConfig.chestAlreadyRegisteredMessage));
             return;
         }
 
@@ -78,7 +78,7 @@ public class DeathChestConstructor implements Listener {
         Block chestBlock = pendingCreation.spawnLocation().getBlock();
         if (chestBlock.getType() != Material.CHEST ||
                 isClaimedByAnotherPlayer(chestBlock, pendingCreation.player().getUniqueId())) {
-            pendingCreation.player().sendMessage(ChatColor.RED + "That chest is already registered as another player's Resurrection Chest.");
+            pendingCreation.player().sendMessage(ChatColor.translateAlternateColorCodes('&', DefaultConfig.chestAlreadyRegisteredMessage));
             return;
         }
 

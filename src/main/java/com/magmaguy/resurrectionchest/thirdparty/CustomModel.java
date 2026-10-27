@@ -14,10 +14,14 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 public class CustomModel {
+    private static final long NOT_YOUR_CHEST_INTERVAL_MILLIS = 3000;
+    private static final Map<UUID, Long> NOT_YOUR_CHEST_SENT = new HashMap<>();
     private final ResurrectionChestObject resurrectionChestObject;
     private final PropEntity propEntity;
 
@@ -98,7 +102,13 @@ public class CustomModel {
                 .setLeftClickCallback((player, entity) -> {
                     // Check if player owns this chest
                     if (!ownerUuid.equals(player.getUniqueId())) {
-                        player.sendMessage(ChatColor.RED + "You can only destroy your own resurrection chest!");
+                        // Every left click lands here, so a held attack would repeat the message several times a second.
+                        long now = System.currentTimeMillis();
+                        Long last = NOT_YOUR_CHEST_SENT.get(player.getUniqueId());
+                        if (last == null || now - last >= NOT_YOUR_CHEST_INTERVAL_MILLIS) {
+                            NOT_YOUR_CHEST_SENT.put(player.getUniqueId(), now);
+                            player.sendMessage(ChatColor.translateAlternateColorCodes('&', DefaultConfig.notYourChestMessage));
+                        }
                         return;
                     }
 

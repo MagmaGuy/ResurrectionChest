@@ -41,6 +41,9 @@ public class DefaultConfig extends ConfigurationFile {
     public static String premiumSingleDeathChestModelName;
     public static String premiumDoubleDeathChestModelName;
     public static String deathChestRemovedMessage;
+    public static String notYourChestMessage;
+    public static String chestAlreadyRegisteredMessage;
+    public static String deathChestFullMessage;
 
     public static boolean isSetupDone() {
         return setupDone;
@@ -90,5 +93,8 @@ public class DefaultConfig extends ConfigurationFile {
         premiumSingleDeathChestModelName = ConfigurationEngine.setString(fileConfiguration, "premiumSingleDeathChestModelName", "resurrectionchest_angelic_single");
         premiumDoubleDeathChestModelName = ConfigurationEngine.setString(fileConfiguration, "premiumDoubleDeathChestModelName", "resurrectionchest_angelic_double");
         deathChestRemovedMessage = ConfigurationEngine.setString(fileConfiguration, "deathChestRemovedMessage", "&8[ResurrectionChest] &cYour Death Chest has been removed!");
+        notYourChestMessage = ConfigurationEngine.setString(fileConfiguration, "Not your chest message", "&cYou can only destroy your own resurrection chest!");
+        chestAlreadyRegisteredMessage = ConfigurationEngine.setString(fileConfiguration, "Chest already registered message", "&cThat chest is already registered as another player's Resurrection Chest.");
+        deathChestFullMessage = ConfigurationEngine.setString(fileConfiguration, "Death chest full message", "&cYour DeathChest was full! Some items were left where you died...");
     }
 }

@@ -94,7 +94,7 @@ public class DeathEvent implements Listener {
         event.getDrops().clear();
         if (!overflowList.isEmpty()) {
             event.getDrops().addAll(overflowList);
-            player.sendMessage(ChatColor.translateAlternateColorCodes('&', "&cYour DeathChest was full! Some items were left where you died..."));
+            player.sendMessage(ChatColor.translateAlternateColorCodes('&', DefaultConfig.deathChestFullMessage));
         }
 
         if (DefaultConfig.storeXP) {
