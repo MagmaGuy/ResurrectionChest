@@ -1,5 +1,6 @@
 package com.magmaguy.resurrectionchest.thirdparty;
 
+import com.magmaguy.easyminecraftgoals.thirdparty.BedrockChecker;
 import com.magmaguy.freeminecraftmodels.config.props.PropBlocks;
 import com.magmaguy.freeminecraftmodels.customentity.PropEntity;
 import com.magmaguy.freeminecraftmodels.dataconverter.FileModelConverter;
@@ -100,6 +101,12 @@ public class CustomModel {
         propEntity
                 // Left click callback - destroy the chest
                 .setLeftClickCallback((player, entity) -> {
+                    // A Bedrock tap on the model arrives as an attack, so on Bedrock a plain tap opens the
+                    // chest the way a Java right click does, and breaking it takes a sneaking tap.
+                    if (BedrockChecker.isBedrock(player) && !player.isSneaking()) {
+                        openChest(player, chestLocation);
+                        return;
+                    }
                     // Check if player owns this chest
                     if (!ownerUuid.equals(player.getUniqueId())) {
                         // Every left click lands here, so a held attack would repeat the message several times a second.
@@ -118,37 +125,39 @@ public class CustomModel {
                     resurrectionChestObject.remove();
                 })
                 // Right click callback - open the chest
-                .setRightClickCallback((player, entity) -> {
-                    // Require the current registration's owner/type tags, not
-                    // merely a replacement chest at the old coordinates.
-                    if (!resurrectionChestObject.hasUsableTrackedChest()) {
-                        player.sendMessage(ChatColor.translateAlternateColorCodes('&', DefaultConfig.chestMissingMessage));
-                        return;
-                    }
+                .setRightClickCallback((player, entity) -> openChest(player, chestLocation));
+    }
 
-                    // Get the chest tile entity and open it
-                    Chest chestBlock = (Chest) resurrectionChestObject.getLocation().getBlock().getState();
-                    Inventory chestInventory = chestBlock.getInventory();
+    private void openChest(Player player, Location chestLocation) {
+        // Require the current registration's owner/type tags, not
+        // merely a replacement chest at the old coordinates.
+        if (!resurrectionChestObject.hasUsableTrackedChest()) {
+            player.sendMessage(ChatColor.translateAlternateColorCodes('&', DefaultConfig.chestMissingMessage));
+            return;
+        }
 
-                    // Play chest open sound
-                    player.playSound(chestLocation, Sound.BLOCK_CHEST_OPEN, 1.0f, 1.0f);
+        // Get the chest tile entity and open it
+        Chest chestBlock = (Chest) resurrectionChestObject.getLocation().getBlock().getState();
+        Inventory chestInventory = chestBlock.getInventory();
 
-                    // Open the chest inventory
-                    player.openInventory(chestInventory);
+        // Play chest open sound
+        player.playSound(chestLocation, Sound.BLOCK_CHEST_OPEN, 1.0f, 1.0f);
 
-                    new BukkitRunnable() {
-                        int counter = 0;
+        // Open the chest inventory
+        player.openInventory(chestInventory);
 
-                        @Override
-                        public void run() {
-                            refreshPropBlocks();
-                            counter++;
-                            if (counter > 1) {
-                                cancel();
-                            }
-                        }
-                    }.runTaskTimer(MetadataHandler.PLUGIN, 0, 1);
-                });
+        new BukkitRunnable() {
+            int counter = 0;
+
+            @Override
+            public void run() {
+                refreshPropBlocks();
+                counter++;
+                if (counter > 1) {
+                    cancel();
+                }
+            }
+        }.runTaskTimer(MetadataHandler.PLUGIN, 0, 1);
     }
 
     public void remove() {
