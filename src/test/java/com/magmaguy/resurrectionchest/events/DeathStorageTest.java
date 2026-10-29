@@ -64,6 +64,9 @@ class DeathStorageTest {
         DefaultConfig.resurrectionChestSignName = "[DeathChest]";
         DefaultConfig.chestCreationMessage = "Created.";
         DefaultConfig.chestProtectedRegionMessage = "Protected.";
+        DefaultConfig.notYourChestMessage = "Not yours.";
+        DefaultConfig.chestAlreadyRegisteredMessage = "Already registered.";
+        DefaultConfig.deathChestFullMessage = "Full.";
         player = server.addPlayer();
         player.addAttachment(plugin, "resurrectionchest.use", true);
         Location location = new Location(server.addSimpleWorld("death-storage"), 8, 64, 8);
