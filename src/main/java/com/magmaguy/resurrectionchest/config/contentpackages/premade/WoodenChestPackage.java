@@ -13,6 +13,8 @@ public class WoodenChestPackage extends ContentPackageConfigFields {
                 "https://nightbreak.io/plugin/resurrectionchest/",
                 "resurrectionchest");
         setNightbreakSlug("wooden-chest");
+        // The published Nightbreak package version; raise it whenever the package is republished.
+        setVersion(1);
         setContentFilePrefixes(List.of("resurrectionchest_free_"));
         setCategory(Category.FREE);
     }

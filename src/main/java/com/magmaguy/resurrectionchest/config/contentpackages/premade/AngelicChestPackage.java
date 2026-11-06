@@ -13,6 +13,8 @@ public class AngelicChestPackage extends ContentPackageConfigFields {
                 "https://nightbreak.io/plugin/resurrectionchest/",
                 "resurrectionchest");
         setNightbreakSlug("angelic-chest");
+        // The published Nightbreak package version; raise it whenever the package is republished.
+        setVersion(1);
         setContentFilePrefixes(List.of("resurrectionchest_angelic_"));
         setCategory(Category.PREMIUM);
     }

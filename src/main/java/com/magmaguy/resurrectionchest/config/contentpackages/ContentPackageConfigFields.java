@@ -8,6 +8,7 @@ import java.util.List;
 
 public class ContentPackageConfigFields extends CustomConfigFields {
     @Getter
+    @Setter
     private int version = 0;
     @Getter
     private String name;
@@ -50,7 +51,10 @@ public class ContentPackageConfigFields extends CustomConfigFields {
         this.name = processString("name", name, null, true);
         this.description = processStringList("description", description, null, true);
         this.downloadLink = processString("downloadLink", downloadLink, downloadLink, false);
-        this.version = processInt("version", version, 0, true);
+        // ResurrectionChest's package archives carry only models, so a download never rewrites the saved version.
+        // A premade package's compiled version therefore wins over a lower one saved earlier; otherwise the package
+        // stays outdated, and every automatic update downloads it again for the next start to import.
+        this.version = Math.max(version, processInt("version", version, 0, true));
         this.folderName = processString("folderName", folderName, null, true);
         this.nightbreakSlug = processString("nightbreakSlug", nightbreakSlug, null, false);
         this.contentFilePrefixes = processStringList("contentFilePrefixes", contentFilePrefixes, List.of(folderName), false);
